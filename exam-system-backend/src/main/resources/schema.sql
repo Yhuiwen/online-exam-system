@@ -2,6 +2,7 @@ CREATE DATABASE IF NOT EXISTS exam_system DEFAULT CHARACTER SET utf8mb4 COLLATE 
 USE exam_system;
 
 DROP TABLE IF EXISTS wrong_question;
+DROP TABLE IF EXISTS exam_violation;
 DROP TABLE IF EXISTS student_answer;
 DROP TABLE IF EXISTS student_exam;
 DROP TABLE IF EXISTS exam_question;
@@ -77,6 +78,18 @@ CREATE TABLE student_exam (
   total_score DECIMAL(8,2) NOT NULL DEFAULT 0,
   status VARCHAR(30) NOT NULL,
   UNIQUE KEY uk_student_exam(student_id, exam_id)
+);
+CREATE TABLE exam_violation (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  student_exam_id BIGINT NOT NULL,
+  student_id BIGINT NOT NULL,
+  exam_id BIGINT NOT NULL,
+  violation_type VARCHAR(50) NOT NULL,
+  description VARCHAR(500),
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_violation_exam(exam_id),
+  INDEX idx_violation_student_exam(student_exam_id),
+  INDEX idx_violation_deduplicate(student_exam_id, violation_type, create_time)
 );
 CREATE TABLE student_answer (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,

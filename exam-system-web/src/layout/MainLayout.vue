@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
-import { DataAnalysis, Document, EditPen, House, List, Reading, Tickets, User } from '@element-plus/icons-vue'
+import { DataAnalysis, Document, EditPen, House, List, Monitor, Reading, Tickets, User } from '@element-plus/icons-vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -14,6 +14,7 @@ const menus = computed(() => {
     { path: '/questions', label: '题库管理', icon: EditPen, roles: ['TEACHER'] },
     { path: '/exams', label: '考试管理', icon: Document, roles: ['TEACHER'] },
     { path: '/teacher/review', label: '主观题批改', icon: EditPen, roles: ['TEACHER'] },
+    { path: '/teacher/monitor', label: '考试监控', icon: Monitor, roles: ['ADMIN','TEACHER'] },
     { path: '/student-exams', label: '参加考试', icon: Tickets, roles: ['STUDENT'] },
     { path: '/scores', label: '成绩查询', icon: List, roles: ['STUDENT'] },
     { path: '/wrong-questions', label: '错题本', icon: EditPen, roles: ['STUDENT'] },

@@ -14,6 +14,7 @@ const routes = [
       { path: 'exams', component: () => import('../views/ExamManage.vue'), meta: { roles: ['TEACHER'] } },
       { path: 'auto-paper/:id', component: () => import('../views/AutoPaper.vue'), meta: { roles: ['TEACHER'] } },
       { path: 'teacher/review', component: () => import('../views/TeacherReview.vue'), meta: { roles: ['ADMIN', 'TEACHER'] } },
+      { path: 'teacher/monitor', component: () => import('../views/ExamMonitor.vue'), meta: { roles: ['ADMIN', 'TEACHER'] } },
       { path: 'student-exams', component: () => import('../views/StudentExamList.vue'), meta: { roles: ['STUDENT'] } },
       { path: 'online-exam/:id', component: () => import('../views/OnlineExam.vue'), meta: { roles: ['STUDENT'] } },
       { path: 'scores', component: () => import('../views/ScoreQuery.vue'), meta: { roles: ['STUDENT'] } },
