@@ -1,0 +1,7 @@
+.idea/
+.vscode/
+*.iml
+exam-system-backend/target/
+exam-system-web/node_modules/
+exam-system-web/dist/
+exam-system-web/*.log
