@@ -10,19 +10,29 @@ request.interceptors.request.use(config => {
 })
 
 request.interceptors.response.use(response => {
+  if (response.config.responseType === 'blob') return response
   const result = response.data
   if (result.code !== 200) {
     ElMessage.error(result.message || '请求失败')
     return Promise.reject(new Error(result.message))
   }
   return result.data
-}, error => {
+}, async error => {
   if (error.response?.status === 401) {
     localStorage.removeItem('exam-token')
     localStorage.removeItem('exam-user')
     location.href = '/login'
   }
-  ElMessage.error(error.response?.data?.message || error.message || '网络错误')
+  let message = error.response?.data?.message
+  if (error.response?.data instanceof Blob) {
+    try {
+      const text = await error.response.data.text()
+      message = JSON.parse(text).message
+    } catch {
+      message = ''
+    }
+  }
+  ElMessage.error(message || error.message || '网络错误')
   return Promise.reject(error)
 })
 

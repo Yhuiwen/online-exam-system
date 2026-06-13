@@ -23,12 +23,15 @@ public class QuestionController {
                                        @RequestParam(required = false) Long courseId,
                                        @RequestParam(required = false) String questionType,
                                        @RequestParam(required = false) String difficulty,
-                                       @RequestParam(required = false) String knowledgeTag) {
+                                       @RequestParam(required = false) String knowledgeTag,
+                                       @RequestParam(required = false) String keyword) {
         LambdaQueryWrapper<Question> q = new LambdaQueryWrapper<Question>()
                 .eq(courseId != null, Question::getCourseId, courseId)
                 .eq(questionType != null && !questionType.isBlank(), Question::getQuestionType, questionType)
                 .eq(difficulty != null && !difficulty.isBlank(), Question::getDifficulty, difficulty)
                 .like(knowledgeTag != null && !knowledgeTag.isBlank(), Question::getKnowledgeTag, knowledgeTag)
+                .and(keyword != null && !keyword.isBlank(), wrapper -> wrapper.like(Question::getContent, keyword)
+                        .or().like(Question::getKnowledgeTag, keyword))
                 .orderByDesc(Question::getCreateTime);
         return Result.success(mapper.selectPage(Page.of(page, size), q));
     }

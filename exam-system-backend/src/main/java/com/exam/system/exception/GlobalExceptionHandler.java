@@ -2,6 +2,7 @@ package com.exam.system.exception;
 
 import com.exam.system.common.Result;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -23,8 +24,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public Result<Void> handleDenied(AccessDeniedException e) {
-        return Result.error(403, "无权访问该资源");
+    public ResponseEntity<Result<Void>> handleDenied(AccessDeniedException e) {
+        return ResponseEntity.status(403).body(Result.error(403, "无权访问该资源"));
     }
 
     @ExceptionHandler(Exception.class)
