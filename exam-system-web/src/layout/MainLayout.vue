@@ -13,6 +13,7 @@ const menus = computed(() => {
     { path: '/courses', label: '课程管理', icon: Reading, roles: ['ADMIN','TEACHER'] },
     { path: '/questions', label: '题库管理', icon: EditPen, roles: ['TEACHER'] },
     { path: '/exams', label: '考试管理', icon: Document, roles: ['TEACHER'] },
+    { path: '/teacher/review', label: '主观题批改', icon: EditPen, roles: ['TEACHER'] },
     { path: '/student-exams', label: '参加考试', icon: Tickets, roles: ['STUDENT'] },
     { path: '/scores', label: '成绩查询', icon: List, roles: ['STUDENT'] },
     { path: '/wrong-questions', label: '错题本', icon: EditPen, roles: ['STUDENT'] },

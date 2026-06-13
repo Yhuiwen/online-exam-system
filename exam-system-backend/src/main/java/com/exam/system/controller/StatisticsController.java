@@ -28,7 +28,7 @@ public class StatisticsController {
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
     public Result<Map<String, Object>> exam(@PathVariable Long examId) {
         List<StudentExam> records = studentExamMapper.selectList(new LambdaQueryWrapper<StudentExam>()
-                .eq(StudentExam::getExamId, examId).in(StudentExam::getStatus, "GRADED", "PENDING_REVIEW"));
+                .eq(StudentExam::getExamId, examId).eq(StudentExam::getStatus, "SUBMITTED"));
         DoubleSummaryStatistics scores = records.stream().map(StudentExam::getTotalScore)
                 .filter(Objects::nonNull).mapToDouble(BigDecimal::doubleValue).summaryStatistics();
         Map<String, Integer> distribution = new LinkedHashMap<>();
@@ -73,7 +73,7 @@ public class StatisticsController {
         Long userId = SecurityUtils.userId();
         List<StudentExam> records = studentExamMapper.selectList(new LambdaQueryWrapper<StudentExam>()
                 .eq(StudentExam::getStudentId, userId)
-                .in(StudentExam::getStatus, "GRADED", "PENDING_REVIEW")
+                .eq(StudentExam::getStatus, "SUBMITTED")
                 .orderByAsc(StudentExam::getSubmitTime));
         double average = records.stream().map(StudentExam::getTotalScore).filter(Objects::nonNull)
                 .mapToDouble(BigDecimal::doubleValue).average().orElse(0);

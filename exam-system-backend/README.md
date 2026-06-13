@@ -10,6 +10,12 @@ SOURCE E:/JAVAWeb/Online Exam and Intelligent Question Bank System/exam-system-b
 SOURCE E:/JAVAWeb/Online Exam and Intelligent Question Bank System/exam-system-backend/src/main/resources/data.sql;
 ```
 
+已有旧数据库且需要保留数据时，执行一次：
+
+```sql
+SOURCE E:/JAVAWeb/Online Exam and Intelligent Question Bank System/exam-system-backend/src/main/resources/review-migration.sql;
+```
+
 PowerShell：
 
 ```powershell

@@ -9,7 +9,7 @@
 [INFO] 
 [INFO] --- resources:3.3.1:resources (default-resources) @ exam-system-backend ---
 [INFO] Copying 1 resource from src\main\resources to target\classes
-[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] Copying 3 resources from src\main\resources to target\classes
 [INFO] 
 [INFO] --- compiler:3.13.0:compile (default-compile) @ exam-system-backend ---
 [INFO] Nothing to compile - all classes are up to date.
@@ -35,41 +35,41 @@
 
  :: Spring Boot ::                (v3.3.5)
 
-2026-06-13T23:33:39.148+08:00  INFO 22140 --- [           main] com.exam.system.ExamSystemApplication    : Starting ExamSystemApplication using Java 21.0.6 with PID 22140 (E:\JAVAWeb\Online Exam and Intelligent Question Bank System\exam-system-backend\target\classes started by 慧文 in E:\JAVAWeb\Online Exam and Intelligent Question Bank System\exam-system-backend)
-2026-06-13T23:33:39.151+08:00  INFO 22140 --- [           main] com.exam.system.ExamSystemApplication    : No active profile set, falling back to 1 default profile: "default"
-2026-06-13T23:33:39.153+08:00 DEBUG 22140 --- [           main] o.s.boot.SpringApplication               : Loading source class com.exam.system.ExamSystemApplication
-2026-06-13T23:33:39.200+08:00 DEBUG 22140 --- [           main] ConfigServletWebServerApplicationContext : Refreshing org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@1bae316d
-2026-06-13T23:33:41.013+08:00 DEBUG 22140 --- [           main] .s.b.w.e.t.TomcatServletWebServerFactory : Code archive: E:\apache-maven-3.9.4\mvn_repo\org\springframework\boot\spring-boot\3.3.5\spring-boot-3.3.5.jar
-2026-06-13T23:33:41.018+08:00 DEBUG 22140 --- [           main] .s.b.w.e.t.TomcatServletWebServerFactory : Code archive: E:\apache-maven-3.9.4\mvn_repo\org\springframework\boot\spring-boot\3.3.5\spring-boot-3.3.5.jar
-2026-06-13T23:33:41.019+08:00 DEBUG 22140 --- [           main] .s.b.w.e.t.TomcatServletWebServerFactory : None of the document roots [src/main/webapp, public, static] point to a directory and will be ignored.
-2026-06-13T23:33:41.041+08:00  INFO 22140 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
-2026-06-13T23:33:41.041+08:00  INFO 22140 --- [           main] o.a.catalina.core.AprLifecycleListener   : Loaded Apache Tomcat Native library [2.0.8] using APR version [1.7.4].
-2026-06-13T23:33:41.045+08:00  INFO 22140 --- [           main] o.a.catalina.core.AprLifecycleListener   : OpenSSL successfully initialized [OpenSSL 3.0.14 4 Jun 2024]
-2026-06-13T23:33:41.056+08:00  INFO 22140 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2026-06-13T23:33:41.060+08:00  INFO 22140 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.31]
-2026-06-13T23:33:41.139+08:00  INFO 22140 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2026-06-13T23:33:41.140+08:00 DEBUG 22140 --- [           main] w.s.c.ServletWebServerApplicationContext : Published root WebApplicationContext as ServletContext attribute with name [org.springframework.web.context.WebApplicationContext.ROOT]
-2026-06-13T23:33:41.140+08:00  INFO 22140 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1940 ms
+2026-06-13T23:59:38.023+08:00  INFO 23076 --- [           main] com.exam.system.ExamSystemApplication    : Starting ExamSystemApplication using Java 21.0.6 with PID 23076 (E:\JAVAWeb\Online Exam and Intelligent Question Bank System\exam-system-backend\target\classes started by 慧文 in E:\JAVAWeb\Online Exam and Intelligent Question Bank System\exam-system-backend)
+2026-06-13T23:59:38.025+08:00  INFO 23076 --- [           main] com.exam.system.ExamSystemApplication    : No active profile set, falling back to 1 default profile: "default"
+2026-06-13T23:59:38.027+08:00 DEBUG 23076 --- [           main] o.s.boot.SpringApplication               : Loading source class com.exam.system.ExamSystemApplication
+2026-06-13T23:59:38.077+08:00 DEBUG 23076 --- [           main] ConfigServletWebServerApplicationContext : Refreshing org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@1bae316d
+2026-06-13T23:59:39.974+08:00 DEBUG 23076 --- [           main] .s.b.w.e.t.TomcatServletWebServerFactory : Code archive: E:\apache-maven-3.9.4\mvn_repo\org\springframework\boot\spring-boot\3.3.5\spring-boot-3.3.5.jar
+2026-06-13T23:59:39.982+08:00 DEBUG 23076 --- [           main] .s.b.w.e.t.TomcatServletWebServerFactory : Code archive: E:\apache-maven-3.9.4\mvn_repo\org\springframework\boot\spring-boot\3.3.5\spring-boot-3.3.5.jar
+2026-06-13T23:59:39.983+08:00 DEBUG 23076 --- [           main] .s.b.w.e.t.TomcatServletWebServerFactory : None of the document roots [src/main/webapp, public, static] point to a directory and will be ignored.
+2026-06-13T23:59:40.034+08:00  INFO 23076 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-06-13T23:59:40.046+08:00  INFO 23076 --- [           main] o.a.catalina.core.AprLifecycleListener   : Loaded Apache Tomcat Native library [2.0.8] using APR version [1.7.4].
+2026-06-13T23:59:40.057+08:00  INFO 23076 --- [           main] o.a.catalina.core.AprLifecycleListener   : OpenSSL successfully initialized [OpenSSL 3.0.14 4 Jun 2024]
+2026-06-13T23:59:40.089+08:00  INFO 23076 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-06-13T23:59:40.090+08:00  INFO 23076 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.31]
+2026-06-13T23:59:40.214+08:00  INFO 23076 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-06-13T23:59:40.216+08:00 DEBUG 23076 --- [           main] w.s.c.ServletWebServerApplicationContext : Published root WebApplicationContext as ServletContext attribute with name [org.springframework.web.context.WebApplicationContext.ROOT]
+2026-06-13T23:59:40.221+08:00  INFO 23076 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2141 ms
  _ _   |_  _ _|_. ___ _ |    _ 
 | | |\/|_)(_| | |_\  |_)||_|_\ 
      /               |         
                         3.5.7 
-2026-06-13T23:33:41.514+08:00  INFO 22140 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2026-06-13T23:33:42.161+08:00  INFO 22140 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@70b6db83
-2026-06-13T23:33:42.175+08:00  INFO 22140 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2026-06-13T23:33:42.485+08:00 DEBUG 22140 --- [           main] o.s.b.w.s.ServletContextInitializerBeans : Mapping filters: springSecurityFilterChain urls=[/*] order=-100, characterEncodingFilter urls=[/*] order=-2147483648, formContentFilter urls=[/*] order=-9900, requestContextFilter urls=[/*] order=-105, jwtAuthenticationFilter urls=[/*] order=2147483647
-2026-06-13T23:33:42.490+08:00 DEBUG 22140 --- [           main] o.s.b.w.s.ServletContextInitializerBeans : Mapping servlets: dispatcherServlet urls=[/]
-2026-06-13T23:33:42.512+08:00 DEBUG 22140 --- [           main] o.s.b.w.s.f.OrderedRequestContextFilter  : Filter 'requestContextFilter' configured for use
-2026-06-13T23:33:42.516+08:00 DEBUG 22140 --- [           main] s.b.w.s.f.OrderedCharacterEncodingFilter : Filter 'characterEncodingFilter' configured for use
-2026-06-13T23:33:42.516+08:00 DEBUG 22140 --- [           main] .DelegatingFilterProxyRegistrationBean$1 : Filter 'springSecurityFilterChain' configured for use
-2026-06-13T23:33:42.516+08:00 DEBUG 22140 --- [           main] o.s.b.w.s.f.OrderedFormContentFilter     : Filter 'formContentFilter' configured for use
-2026-06-13T23:33:42.567+08:00 DEBUG 22140 --- [           main] o.s.b.a.AutoConfigurationPackages        : @EnableAutoConfiguration was declared on a class in the package 'com.exam.system'. Automatic @Repository and @Entity scanning is enabled.
-2026-06-13T23:33:43.313+08:00 DEBUG 22140 --- [           main] s.w.s.m.m.a.RequestMappingHandlerMapping : 32 mappings in 'requestMappingHandlerMapping'
-2026-06-13T23:33:43.416+08:00 DEBUG 22140 --- [           main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
-2026-06-13T23:33:43.644+08:00 DEBUG 22140 --- [           main] s.w.s.m.m.a.RequestMappingHandlerAdapter : ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
-2026-06-13T23:33:43.720+08:00 DEBUG 22140 --- [           main] .m.m.a.ExceptionHandlerExceptionResolver : ControllerAdvice beans: 1 @ExceptionHandler, 1 ResponseBodyAdvice
-2026-06-13T23:33:44.036+08:00  INFO 22140 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
-2026-06-13T23:33:44.070+08:00 DEBUG 22140 --- [           main] .s.b.a.l.ConditionEvaluationReportLogger : 
+2026-06-13T23:59:40.480+08:00  INFO 23076 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-06-13T23:59:41.123+08:00  INFO 23076 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@50211483
+2026-06-13T23:59:41.135+08:00  INFO 23076 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-06-13T23:59:41.392+08:00 DEBUG 23076 --- [           main] o.s.b.w.s.ServletContextInitializerBeans : Mapping filters: springSecurityFilterChain urls=[/*] order=-100, characterEncodingFilter urls=[/*] order=-2147483648, formContentFilter urls=[/*] order=-9900, requestContextFilter urls=[/*] order=-105, jwtAuthenticationFilter urls=[/*] order=2147483647
+2026-06-13T23:59:41.392+08:00 DEBUG 23076 --- [           main] o.s.b.w.s.ServletContextInitializerBeans : Mapping servlets: dispatcherServlet urls=[/]
+2026-06-13T23:59:41.421+08:00 DEBUG 23076 --- [           main] o.s.b.w.s.f.OrderedRequestContextFilter  : Filter 'requestContextFilter' configured for use
+2026-06-13T23:59:41.423+08:00 DEBUG 23076 --- [           main] s.b.w.s.f.OrderedCharacterEncodingFilter : Filter 'characterEncodingFilter' configured for use
+2026-06-13T23:59:41.425+08:00 DEBUG 23076 --- [           main] .DelegatingFilterProxyRegistrationBean$1 : Filter 'springSecurityFilterChain' configured for use
+2026-06-13T23:59:41.426+08:00 DEBUG 23076 --- [           main] o.s.b.w.s.f.OrderedFormContentFilter     : Filter 'formContentFilter' configured for use
+2026-06-13T23:59:41.481+08:00 DEBUG 23076 --- [           main] o.s.b.a.AutoConfigurationPackages        : @EnableAutoConfiguration was declared on a class in the package 'com.exam.system'. Automatic @Repository and @Entity scanning is enabled.
+2026-06-13T23:59:42.289+08:00 DEBUG 23076 --- [           main] s.w.s.m.m.a.RequestMappingHandlerMapping : 35 mappings in 'requestMappingHandlerMapping'
+2026-06-13T23:59:42.405+08:00 DEBUG 23076 --- [           main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2026-06-13T23:59:42.673+08:00 DEBUG 23076 --- [           main] s.w.s.m.m.a.RequestMappingHandlerAdapter : ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2026-06-13T23:59:42.730+08:00 DEBUG 23076 --- [           main] .m.m.a.ExceptionHandlerExceptionResolver : ControllerAdvice beans: 1 @ExceptionHandler, 1 ResponseBodyAdvice
+2026-06-13T23:59:42.999+08:00  INFO 23076 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2026-06-13T23:59:43.037+08:00 DEBUG 23076 --- [           main] .s.b.a.l.ConditionEvaluationReportLogger : 
 
 
 ============================
@@ -1204,51 +1204,244 @@ Unconditional classes:
 
 
 
-2026-06-13T23:33:44.080+08:00  INFO 22140 --- [           main] com.exam.system.ExamSystemApplication    : Started ExamSystemApplication in 5.639 seconds (process running for 6.125)
-2026-06-13T23:33:44.088+08:00 DEBUG 22140 --- [           main] o.s.b.a.ApplicationAvailabilityBean      : Application availability state LivenessState changed to CORRECT
-2026-06-13T23:33:44.091+08:00 DEBUG 22140 --- [           main] o.s.b.a.ApplicationAvailabilityBean      : Application availability state ReadinessState changed to ACCEPTING_TRAFFIC
-2026-06-13T23:34:11.596+08:00  INFO 22140 --- [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-06-13T23:34:11.596+08:00  INFO 22140 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-2026-06-13T23:34:11.597+08:00 DEBUG 22140 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected StandardServletMultipartResolver
-2026-06-13T23:34:11.597+08:00 DEBUG 22140 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected AcceptHeaderLocaleResolver
-2026-06-13T23:34:11.597+08:00 DEBUG 22140 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected FixedThemeResolver
-2026-06-13T23:34:11.600+08:00 DEBUG 22140 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@11b186b8
-2026-06-13T23:34:11.602+08:00 DEBUG 22140 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.support.SessionFlashMapManager@45ebc7a4
-2026-06-13T23:34:11.603+08:00 DEBUG 22140 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : enableLoggingRequestDetails='false': request parameters and headers will be masked to prevent unsafe logging of potentially sensitive data
-2026-06-13T23:34:11.604+08:00  INFO 22140 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 7 ms
-2026-06-13T23:34:11.633+08:00 DEBUG 22140 --- [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
-2026-06-13T23:34:11.638+08:00 DEBUG 22140 --- [nio-8080-exec-2] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.AuthController#login(LoginRequest)
-2026-06-13T23:34:11.737+08:00 DEBUG 22140 --- [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [LoginRequest[username=teacher, password=123456]]
-2026-06-13T23:34:12.369+08:00 DEBUG 22140 --- [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
-2026-06-13T23:34:12.388+08:00 DEBUG 22140 --- [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=LoginVO[token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ0ZWFjaGVyIiwidX (truncated)...]
-2026-06-13T23:34:12.416+08:00 DEBUG 22140 --- [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
-2026-06-13T23:35:06.841+08:00 DEBUG 22140 --- [nio-8080-exec-5] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
-2026-06-13T23:35:06.847+08:00 DEBUG 22140 --- [nio-8080-exec-5] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.AuthController#login(LoginRequest)
-2026-06-13T23:35:06.847+08:00 DEBUG 22140 --- [nio-8080-exec-5] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [LoginRequest[username=admin, password=123456]]
-2026-06-13T23:35:06.989+08:00 DEBUG 22140 --- [nio-8080-exec-5] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
-2026-06-13T23:35:06.993+08:00 DEBUG 22140 --- [nio-8080-exec-5] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=LoginVO[token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhZG1pbiIsInVzZX (truncated)...]
-2026-06-13T23:35:06.993+08:00 DEBUG 22140 --- [nio-8080-exec-5] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
-2026-06-13T23:35:07.042+08:00 DEBUG 22140 --- [nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
-2026-06-13T23:35:07.043+08:00 DEBUG 22140 --- [nio-8080-exec-6] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.AuthController#login(LoginRequest)
-2026-06-13T23:35:07.045+08:00 DEBUG 22140 --- [nio-8080-exec-6] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [LoginRequest[username=teacher, password=123456]]
-2026-06-13T23:35:07.262+08:00 DEBUG 22140 --- [nio-8080-exec-6] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
-2026-06-13T23:35:07.263+08:00 DEBUG 22140 --- [nio-8080-exec-6] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=LoginVO[token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ0ZWFjaGVyIiwidX (truncated)...]
-2026-06-13T23:35:07.264+08:00 DEBUG 22140 --- [nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
-2026-06-13T23:35:07.269+08:00 DEBUG 22140 --- [nio-8080-exec-7] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
-2026-06-13T23:35:07.272+08:00 DEBUG 22140 --- [nio-8080-exec-7] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.AuthController#login(LoginRequest)
-2026-06-13T23:35:07.274+08:00 DEBUG 22140 --- [nio-8080-exec-7] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [LoginRequest[username=student, password=123456]]
-2026-06-13T23:35:07.450+08:00 DEBUG 22140 --- [nio-8080-exec-7] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
-2026-06-13T23:35:07.451+08:00 DEBUG 22140 --- [nio-8080-exec-7] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=LoginVO[token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJzdHVkZW50IiwidX (truncated)...]
-2026-06-13T23:35:07.452+08:00 DEBUG 22140 --- [nio-8080-exec-7] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
-2026-06-13T23:37:27.724+08:00 DEBUG 22140 --- [nio-8080-exec-9] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
-2026-06-13T23:37:27.724+08:00 DEBUG 22140 --- [nio-8080-exec-9] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.AuthController#login(LoginRequest)
-2026-06-13T23:37:27.724+08:00 DEBUG 22140 --- [nio-8080-exec-9] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [LoginRequest[username=admin, password=123456]]
-2026-06-13T23:37:27.817+08:00 DEBUG 22140 --- [nio-8080-exec-9] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
-2026-06-13T23:37:27.817+08:00 DEBUG 22140 --- [nio-8080-exec-9] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=LoginVO[token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhZG1pbiIsInVzZX (truncated)...]
-2026-06-13T23:37:27.817+08:00 DEBUG 22140 --- [nio-8080-exec-9] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
-2026-06-13T23:40:48.080+08:00 DEBUG 22140 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
-2026-06-13T23:40:48.084+08:00 DEBUG 22140 --- [nio-8080-exec-1] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.AuthController#login(LoginRequest)
-2026-06-13T23:40:48.084+08:00 DEBUG 22140 --- [nio-8080-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [LoginRequest[username=admin, password=123456]]
-2026-06-13T23:40:48.330+08:00 DEBUG 22140 --- [nio-8080-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
-2026-06-13T23:40:48.332+08:00 DEBUG 22140 --- [nio-8080-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=LoginVO[token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhZG1pbiIsInVzZX (truncated)...]
-2026-06-13T23:40:48.333+08:00 DEBUG 22140 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-13T23:59:43.045+08:00  INFO 23076 --- [           main] com.exam.system.ExamSystemApplication    : Started ExamSystemApplication in 5.771 seconds (process running for 6.29)
+2026-06-13T23:59:43.049+08:00 DEBUG 23076 --- [           main] o.s.b.a.ApplicationAvailabilityBean      : Application availability state LivenessState changed to CORRECT
+2026-06-13T23:59:43.051+08:00 DEBUG 23076 --- [           main] o.s.b.a.ApplicationAvailabilityBean      : Application availability state ReadinessState changed to ACCEPTING_TRAFFIC
+2026-06-14T00:00:20.049+08:00  INFO 23076 --- [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-06-14T00:00:20.054+08:00  INFO 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-06-14T00:00:20.057+08:00 DEBUG 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected StandardServletMultipartResolver
+2026-06-14T00:00:20.057+08:00 DEBUG 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected AcceptHeaderLocaleResolver
+2026-06-14T00:00:20.058+08:00 DEBUG 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected FixedThemeResolver
+2026-06-14T00:00:20.061+08:00 DEBUG 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@6899cec6
+2026-06-14T00:00:20.063+08:00 DEBUG 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.support.SessionFlashMapManager@5ad2a6f8
+2026-06-14T00:00:20.065+08:00 DEBUG 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : enableLoggingRequestDetails='false': request parameters and headers will be masked to prevent unsafe logging of potentially sensitive data
+2026-06-14T00:00:20.066+08:00  INFO 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 9 ms
+2026-06-14T00:00:20.121+08:00 DEBUG 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
+2026-06-14T00:00:20.125+08:00 DEBUG 23076 --- [nio-8080-exec-1] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.AuthController#login(LoginRequest)
+2026-06-14T00:00:20.320+08:00 DEBUG 23076 --- [nio-8080-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [LoginRequest[username=teacher, password=123456]]
+2026-06-14T00:00:21.057+08:00 DEBUG 23076 --- [nio-8080-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:21.074+08:00 DEBUG 23076 --- [nio-8080-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=LoginVO[token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ0ZWFjaGVyIiwidX (truncated)...]
+2026-06-14T00:00:21.101+08:00 DEBUG 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:21.175+08:00 DEBUG 23076 --- [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
+2026-06-14T00:00:21.177+08:00 DEBUG 23076 --- [nio-8080-exec-2] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.AuthController#login(LoginRequest)
+2026-06-14T00:00:21.180+08:00 DEBUG 23076 --- [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [LoginRequest[username=student, password=123456]]
+2026-06-14T00:00:21.359+08:00 DEBUG 23076 --- [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:21.360+08:00 DEBUG 23076 --- [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=LoginVO[token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJzdHVkZW50IiwidX (truncated)...]
+2026-06-14T00:00:21.362+08:00 DEBUG 23076 --- [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:21.505+08:00 DEBUG 23076 --- [nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : POST "/api/exams", parameters={}
+2026-06-14T00:00:21.508+08:00 DEBUG 23076 --- [nio-8080-exec-3] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ExamController#create(Exam)
+2026-06-14T00:00:21.536+08:00 DEBUG 23076 --- [nio-8080-exec-3] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [Exam(id=null, examName=Subjective Review Acceptance, courseId=1, teacherId=null, startTime=2026-06-1 (truncated)...]
+2026-06-14T00:00:21.650+08:00 DEBUG 23076 --- [nio-8080-exec-3] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:21.652+08:00 DEBUG 23076 --- [nio-8080-exec-3] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=Exam(id=2, examName=Subjective Review Acceptance, courseId=1, (truncated)...]
+2026-06-14T00:00:21.675+08:00 DEBUG 23076 --- [nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:21.704+08:00 DEBUG 23076 --- [nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : POST "/api/exams/2/questions/1", parameters={}
+2026-06-14T00:00:21.707+08:00 DEBUG 23076 --- [nio-8080-exec-4] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ExamController#addQuestion(Long, Long)
+2026-06-14T00:00:21.794+08:00 DEBUG 23076 --- [nio-8080-exec-4] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:21.796+08:00 DEBUG 23076 --- [nio-8080-exec-4] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=null)]
+2026-06-14T00:00:21.798+08:00 DEBUG 23076 --- [nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:21.812+08:00 DEBUG 23076 --- [nio-8080-exec-5] o.s.web.servlet.DispatcherServlet        : POST "/api/exams/2/questions/11", parameters={}
+2026-06-14T00:00:21.813+08:00 DEBUG 23076 --- [nio-8080-exec-5] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ExamController#addQuestion(Long, Long)
+2026-06-14T00:00:21.872+08:00 DEBUG 23076 --- [nio-8080-exec-5] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:21.873+08:00 DEBUG 23076 --- [nio-8080-exec-5] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=null)]
+2026-06-14T00:00:21.878+08:00 DEBUG 23076 --- [nio-8080-exec-5] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:21.895+08:00 DEBUG 23076 --- [nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : PUT "/api/exams/2/status?status=PUBLISHED", parameters={masked}
+2026-06-14T00:00:21.898+08:00 DEBUG 23076 --- [nio-8080-exec-6] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ExamController#status(Long, String)
+2026-06-14T00:00:21.923+08:00 DEBUG 23076 --- [nio-8080-exec-6] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:21.925+08:00 DEBUG 23076 --- [nio-8080-exec-6] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=null)]
+2026-06-14T00:00:21.929+08:00 DEBUG 23076 --- [nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:21.945+08:00 DEBUG 23076 --- [nio-8080-exec-7] o.s.web.servlet.DispatcherServlet        : POST "/api/student-exams/2/start", parameters={}
+2026-06-14T00:00:21.948+08:00 DEBUG 23076 --- [nio-8080-exec-7] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.StudentExamController#start(Long)
+2026-06-14T00:00:22.005+08:00 DEBUG 23076 --- [nio-8080-exec-7] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:22.010+08:00 DEBUG 23076 --- [nio-8080-exec-7] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=StudentExam(id=1, studentId=3, examId=2, startTime=2026-06-14 (truncated)...]
+2026-06-14T00:00:22.020+08:00 DEBUG 23076 --- [nio-8080-exec-7] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:22.040+08:00 DEBUG 23076 --- [nio-8080-exec-8] o.s.web.servlet.DispatcherServlet        : POST "/api/student-exams/submit", parameters={}
+2026-06-14T00:00:22.042+08:00 DEBUG 23076 --- [nio-8080-exec-8] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.StudentExamController#submit(SubmitExamRequest)
+2026-06-14T00:00:22.055+08:00 DEBUG 23076 --- [nio-8080-exec-8] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [SubmitExamRequest[studentExamId=1, answers=[AnswerItem[questionId=1, answer=A], AnswerItem[questionI (truncated)...]
+2026-06-14T00:00:22.137+08:00 DEBUG 23076 --- [nio-8080-exec-8] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:22.139+08:00 DEBUG 23076 --- [nio-8080-exec-8] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=StudentExam(id=1, studentId=3, examId=2, startTime=2026-06-14 (truncated)...]
+2026-06-14T00:00:22.142+08:00 DEBUG 23076 --- [nio-8080-exec-8] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:22.158+08:00 DEBUG 23076 --- [nio-8080-exec-9] o.s.web.servlet.DispatcherServlet        : GET "/api/statistics/exam/2", parameters={}
+2026-06-14T00:00:22.160+08:00 DEBUG 23076 --- [nio-8080-exec-9] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.StatisticsController#exam(Long)
+2026-06-14T00:00:22.200+08:00 DEBUG 23076 --- [nio-8080-exec-9] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:22.202+08:00 DEBUG 23076 --- [nio-8080-exec-9] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data={participantCount=0, averageScore=0, highestScore=0.0, lowest (truncated)...]
+2026-06-14T00:00:22.210+08:00 DEBUG 23076 --- [nio-8080-exec-9] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:22.226+08:00 DEBUG 23076 --- [io-8080-exec-10] o.s.web.servlet.DispatcherServlet        : GET "/api/statistics/student", parameters={}
+2026-06-14T00:00:22.227+08:00 DEBUG 23076 --- [io-8080-exec-10] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.StatisticsController#student()
+2026-06-14T00:00:22.252+08:00 DEBUG 23076 --- [io-8080-exec-10] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:22.253+08:00 DEBUG 23076 --- [io-8080-exec-10] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data={examCount=0, averageScore=0.00, wrongCount=0, courseScores=[ (truncated)...]
+2026-06-14T00:00:22.256+08:00 DEBUG 23076 --- [io-8080-exec-10] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:22.271+08:00 DEBUG 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : GET "/api/review/exam/2/pending", parameters={}
+2026-06-14T00:00:22.273+08:00 DEBUG 23076 --- [nio-8080-exec-1] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ReviewController#pending(Long)
+2026-06-14T00:00:22.299+08:00 DEBUG 23076 --- [nio-8080-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:22.301+08:00 DEBUG 23076 --- [nio-8080-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=[{studentExamId=1, studentName=学生用户, submitTime=2026-06-14T00 (truncated)...]
+2026-06-14T00:00:22.304+08:00 DEBUG 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:22.316+08:00 DEBUG 23076 --- [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : GET "/api/review/student-exam/1", parameters={}
+2026-06-14T00:00:22.318+08:00 DEBUG 23076 --- [nio-8080-exec-2] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ReviewController#detail(Long)
+2026-06-14T00:00:22.362+08:00 DEBUG 23076 --- [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:22.364+08:00 DEBUG 23076 --- [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data={studentExam=StudentExam(id=1, studentId=3, examId=2, startTi (truncated)...]
+2026-06-14T00:00:22.369+08:00 DEBUG 23076 --- [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:22.441+08:00 DEBUG 23076 --- [nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : POST "/api/review/answer/2", parameters={}
+2026-06-14T00:00:22.444+08:00 DEBUG 23076 --- [nio-8080-exec-3] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ReviewController#review(Long, ReviewAnswerRequest)
+2026-06-14T00:00:22.458+08:00 DEBUG 23076 --- [nio-8080-exec-3] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [ReviewAnswerRequest[score=11, reviewComment=too high]]
+2026-06-14T00:00:22.511+08:00 DEBUG 23076 --- [nio-8080-exec-3] .m.m.a.ExceptionHandlerExceptionResolver : Using @ExceptionHandler com.exam.system.exception.GlobalExceptionHandler#handleBusiness(BusinessException)
+2026-06-14T00:00:22.515+08:00 DEBUG 23076 --- [nio-8080-exec-3] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:22.516+08:00 DEBUG 23076 --- [nio-8080-exec-3] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=400, message=批改分数不能超过该题分值 10.00, data=null)]
+2026-06-14T00:00:22.520+08:00 DEBUG 23076 --- [nio-8080-exec-3] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [com.exam.system.exception.BusinessException: 批改分数不能超过该题分值 10.00]
+2026-06-14T00:00:22.523+08:00 DEBUG 23076 --- [nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:22.534+08:00 DEBUG 23076 --- [nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : GET "/api/review/exam/2/pending", parameters={}
+2026-06-14T00:00:22.536+08:00 DEBUG 23076 --- [nio-8080-exec-4] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ReviewController#pending(Long)
+2026-06-14T00:00:22.541+08:00 DEBUG 23076 --- [nio-8080-exec-4] .m.m.a.ExceptionHandlerExceptionResolver : Using @ExceptionHandler com.exam.system.exception.GlobalExceptionHandler#handleDenied(AccessDeniedException)
+2026-06-14T00:00:22.542+08:00 DEBUG 23076 --- [nio-8080-exec-4] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:22.543+08:00 DEBUG 23076 --- [nio-8080-exec-4] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=403, message=无权访问该资源, data=null)]
+2026-06-14T00:00:22.546+08:00 DEBUG 23076 --- [nio-8080-exec-4] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.security.authorization.AuthorizationDeniedException: Access Denied]
+2026-06-14T00:00:22.546+08:00 DEBUG 23076 --- [nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:22.562+08:00 DEBUG 23076 --- [nio-8080-exec-5] o.s.web.servlet.DispatcherServlet        : POST "/api/review/answer/2", parameters={}
+2026-06-14T00:00:22.564+08:00 DEBUG 23076 --- [nio-8080-exec-5] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ReviewController#review(Long, ReviewAnswerRequest)
+2026-06-14T00:00:22.567+08:00 DEBUG 23076 --- [nio-8080-exec-5] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [ReviewAnswerRequest[score=8, reviewComment=??????,???????]]
+2026-06-14T00:00:22.625+08:00 DEBUG 23076 --- [nio-8080-exec-5] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:22.627+08:00 DEBUG 23076 --- [nio-8080-exec-5] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data={studentExamId=1, totalScore=13.00, status=SUBMITTED, remaini (truncated)...]
+2026-06-14T00:00:22.631+08:00 DEBUG 23076 --- [nio-8080-exec-5] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:22.647+08:00 DEBUG 23076 --- [nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : GET "/api/review/student-exam/1", parameters={}
+2026-06-14T00:00:22.650+08:00 DEBUG 23076 --- [nio-8080-exec-6] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ReviewController#detail(Long)
+2026-06-14T00:00:22.700+08:00 DEBUG 23076 --- [nio-8080-exec-6] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:22.703+08:00 DEBUG 23076 --- [nio-8080-exec-6] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data={studentExam=StudentExam(id=1, studentId=3, examId=2, startTi (truncated)...]
+2026-06-14T00:00:22.708+08:00 DEBUG 23076 --- [nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:22.750+08:00 DEBUG 23076 --- [nio-8080-exec-7] o.s.web.servlet.DispatcherServlet        : GET "/api/review/exam/2/pending", parameters={}
+2026-06-14T00:00:22.753+08:00 DEBUG 23076 --- [nio-8080-exec-7] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ReviewController#pending(Long)
+2026-06-14T00:00:22.761+08:00 DEBUG 23076 --- [nio-8080-exec-7] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:22.763+08:00 DEBUG 23076 --- [nio-8080-exec-7] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=[])]
+2026-06-14T00:00:22.765+08:00 DEBUG 23076 --- [nio-8080-exec-7] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:22.770+08:00 DEBUG 23076 --- [nio-8080-exec-8] o.s.web.servlet.DispatcherServlet        : GET "/api/statistics/exam/2", parameters={}
+2026-06-14T00:00:22.771+08:00 DEBUG 23076 --- [nio-8080-exec-8] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.StatisticsController#exam(Long)
+2026-06-14T00:00:22.794+08:00 DEBUG 23076 --- [nio-8080-exec-8] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:22.795+08:00 DEBUG 23076 --- [nio-8080-exec-8] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data={participantCount=1, averageScore=13.00, highestScore=13.0, l (truncated)...]
+2026-06-14T00:00:22.796+08:00 DEBUG 23076 --- [nio-8080-exec-8] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:22.801+08:00 DEBUG 23076 --- [nio-8080-exec-9] o.s.web.servlet.DispatcherServlet        : GET "/api/statistics/student", parameters={}
+2026-06-14T00:00:22.802+08:00 DEBUG 23076 --- [nio-8080-exec-9] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.StatisticsController#student()
+2026-06-14T00:00:22.808+08:00 DEBUG 23076 --- [nio-8080-exec-9] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:22.809+08:00 DEBUG 23076 --- [nio-8080-exec-9] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data={examCount=1, averageScore=13.00, wrongCount=0, courseScores= (truncated)...]
+2026-06-14T00:00:22.810+08:00 DEBUG 23076 --- [nio-8080-exec-9] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:22.816+08:00 DEBUG 23076 --- [io-8080-exec-10] o.s.web.servlet.DispatcherServlet        : GET "/api/student-exams", parameters={}
+2026-06-14T00:00:22.816+08:00 DEBUG 23076 --- [io-8080-exec-10] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.StudentExamController#records()
+2026-06-14T00:00:22.821+08:00 DEBUG 23076 --- [io-8080-exec-10] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:22.821+08:00 DEBUG 23076 --- [io-8080-exec-10] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=[StudentExam(id=1, studentId=3, examId=2, startTime=2026-06-1 (truncated)...]
+2026-06-14T00:00:22.822+08:00 DEBUG 23076 --- [io-8080-exec-10] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:22.827+08:00 DEBUG 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : GET "/api/student-exams/1/answers", parameters={}
+2026-06-14T00:00:22.828+08:00 DEBUG 23076 --- [nio-8080-exec-1] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.StudentExamController#answers(Long)
+2026-06-14T00:00:22.833+08:00 DEBUG 23076 --- [nio-8080-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:22.835+08:00 DEBUG 23076 --- [nio-8080-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=[StudentAnswer(id=1, studentExamId=1, questionId=1, answer=A, (truncated)...]
+2026-06-14T00:00:22.837+08:00 DEBUG 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:00:22.862+08:00 DEBUG 23076 --- [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : GET "/api/exams/2", parameters={}
+2026-06-14T00:00:22.863+08:00 DEBUG 23076 --- [nio-8080-exec-2] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ExamController#detail(Long)
+2026-06-14T00:00:22.867+08:00 DEBUG 23076 --- [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:00:22.868+08:00 DEBUG 23076 --- [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=Exam(id=2, examName=Subjective Review Acceptance, courseId=1, (truncated)...]
+2026-06-14T00:00:22.870+08:00 DEBUG 23076 --- [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:01:20.229+08:00 DEBUG 23076 --- [nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
+2026-06-14T00:01:20.230+08:00 DEBUG 23076 --- [nio-8080-exec-4] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.AuthController#login(LoginRequest)
+2026-06-14T00:01:20.232+08:00 DEBUG 23076 --- [nio-8080-exec-4] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [LoginRequest[username=teacher, password=123456]]
+2026-06-14T00:01:20.406+08:00 DEBUG 23076 --- [nio-8080-exec-4] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:01:20.408+08:00 DEBUG 23076 --- [nio-8080-exec-4] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=LoginVO[token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ0ZWFjaGVyIiwidX (truncated)...]
+2026-06-14T00:01:20.411+08:00 DEBUG 23076 --- [nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:01:20.435+08:00 DEBUG 23076 --- [nio-8080-exec-5] o.s.web.servlet.DispatcherServlet        : GET "/api/review/student-exam/1", parameters={}
+2026-06-14T00:01:20.438+08:00 DEBUG 23076 --- [nio-8080-exec-5] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ReviewController#detail(Long)
+2026-06-14T00:01:20.471+08:00 DEBUG 23076 --- [nio-8080-exec-5] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:01:20.473+08:00 DEBUG 23076 --- [nio-8080-exec-5] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data={studentExam=StudentExam(id=1, studentId=3, examId=2, startTi (truncated)...]
+2026-06-14T00:01:20.477+08:00 DEBUG 23076 --- [nio-8080-exec-5] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:01:20.491+08:00 DEBUG 23076 --- [nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : POST "/api/review/answer/2", parameters={}
+2026-06-14T00:01:20.493+08:00 DEBUG 23076 --- [nio-8080-exec-6] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ReviewController#review(Long, ReviewAnswerRequest)
+2026-06-14T00:01:20.496+08:00 DEBUG 23076 --- [nio-8080-exec-6] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [ReviewAnswerRequest[score=8, reviewComment=回答基本正确，但缺少关键步骤]]
+2026-06-14T00:01:20.538+08:00 DEBUG 23076 --- [nio-8080-exec-6] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:01:20.540+08:00 DEBUG 23076 --- [nio-8080-exec-6] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data={studentExamId=1, totalScore=13.00, status=SUBMITTED, remaini (truncated)...]
+2026-06-14T00:01:20.544+08:00 DEBUG 23076 --- [nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:01:53.177+08:00 DEBUG 23076 --- [nio-8080-exec-9] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
+2026-06-14T00:01:53.185+08:00 DEBUG 23076 --- [nio-8080-exec-9] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.AuthController#login(LoginRequest)
+2026-06-14T00:01:53.187+08:00 DEBUG 23076 --- [nio-8080-exec-9] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [LoginRequest[username=teacher, password=123456]]
+2026-06-14T00:01:53.326+08:00 DEBUG 23076 --- [nio-8080-exec-9] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:01:53.328+08:00 DEBUG 23076 --- [nio-8080-exec-9] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=LoginVO[token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ0ZWFjaGVyIiwidX (truncated)...]
+2026-06-14T00:01:53.329+08:00 DEBUG 23076 --- [nio-8080-exec-9] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:01:53.348+08:00 DEBUG 23076 --- [io-8080-exec-10] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
+2026-06-14T00:01:53.349+08:00 DEBUG 23076 --- [io-8080-exec-10] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.AuthController#login(LoginRequest)
+2026-06-14T00:01:53.352+08:00 DEBUG 23076 --- [io-8080-exec-10] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [LoginRequest[username=student, password=123456]]
+2026-06-14T00:01:53.461+08:00 DEBUG 23076 --- [io-8080-exec-10] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:01:53.463+08:00 DEBUG 23076 --- [io-8080-exec-10] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=LoginVO[token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJzdHVkZW50IiwidX (truncated)...]
+2026-06-14T00:01:53.464+08:00 DEBUG 23076 --- [io-8080-exec-10] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:01:53.471+08:00 DEBUG 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : POST "/api/exams", parameters={}
+2026-06-14T00:01:53.471+08:00 DEBUG 23076 --- [nio-8080-exec-1] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ExamController#create(Exam)
+2026-06-14T00:01:53.472+08:00 DEBUG 23076 --- [nio-8080-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [Exam(id=null, examName=Objective Only Acceptance, courseId=1, teacherId=null, startTime=2026-06-13T1 (truncated)...]
+2026-06-14T00:01:53.478+08:00 DEBUG 23076 --- [nio-8080-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:01:53.478+08:00 DEBUG 23076 --- [nio-8080-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=Exam(id=3, examName=Objective Only Acceptance, courseId=1, te (truncated)...]
+2026-06-14T00:01:53.480+08:00 DEBUG 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:01:53.488+08:00 DEBUG 23076 --- [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : POST "/api/exams/3/questions/1", parameters={}
+2026-06-14T00:01:53.488+08:00 DEBUG 23076 --- [nio-8080-exec-2] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ExamController#addQuestion(Long, Long)
+2026-06-14T00:01:53.512+08:00 DEBUG 23076 --- [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:01:53.513+08:00 DEBUG 23076 --- [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=null)]
+2026-06-14T00:01:53.514+08:00 DEBUG 23076 --- [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:01:53.519+08:00 DEBUG 23076 --- [nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : PUT "/api/exams/3/status?status=PUBLISHED", parameters={masked}
+2026-06-14T00:01:53.520+08:00 DEBUG 23076 --- [nio-8080-exec-3] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ExamController#status(Long, String)
+2026-06-14T00:01:53.528+08:00 DEBUG 23076 --- [nio-8080-exec-3] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:01:53.528+08:00 DEBUG 23076 --- [nio-8080-exec-3] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=null)]
+2026-06-14T00:01:53.530+08:00 DEBUG 23076 --- [nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:01:53.537+08:00 DEBUG 23076 --- [nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : POST "/api/student-exams/3/start", parameters={}
+2026-06-14T00:01:53.537+08:00 DEBUG 23076 --- [nio-8080-exec-4] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.StudentExamController#start(Long)
+2026-06-14T00:01:53.542+08:00 DEBUG 23076 --- [nio-8080-exec-4] .m.m.a.ExceptionHandlerExceptionResolver : Using @ExceptionHandler com.exam.system.exception.GlobalExceptionHandler#handleBusiness(BusinessException)
+2026-06-14T00:01:53.543+08:00 DEBUG 23076 --- [nio-8080-exec-4] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:01:53.544+08:00 DEBUG 23076 --- [nio-8080-exec-4] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=400, message=考试已结束, data=null)]
+2026-06-14T00:01:53.544+08:00 DEBUG 23076 --- [nio-8080-exec-4] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [com.exam.system.exception.BusinessException: 考试已结束]
+2026-06-14T00:01:53.545+08:00 DEBUG 23076 --- [nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:02:12.391+08:00 DEBUG 23076 --- [nio-8080-exec-7] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
+2026-06-14T00:02:12.398+08:00 DEBUG 23076 --- [nio-8080-exec-7] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.AuthController#login(LoginRequest)
+2026-06-14T00:02:12.402+08:00 DEBUG 23076 --- [nio-8080-exec-7] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [LoginRequest[username=teacher, password=123456]]
+2026-06-14T00:02:12.571+08:00 DEBUG 23076 --- [nio-8080-exec-7] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:02:12.573+08:00 DEBUG 23076 --- [nio-8080-exec-7] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=LoginVO[token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ0ZWFjaGVyIiwidX (truncated)...]
+2026-06-14T00:02:12.575+08:00 DEBUG 23076 --- [nio-8080-exec-7] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:02:12.595+08:00 DEBUG 23076 --- [nio-8080-exec-8] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
+2026-06-14T00:02:12.597+08:00 DEBUG 23076 --- [nio-8080-exec-8] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.AuthController#login(LoginRequest)
+2026-06-14T00:02:12.599+08:00 DEBUG 23076 --- [nio-8080-exec-8] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [LoginRequest[username=student, password=123456]]
+2026-06-14T00:02:12.816+08:00 DEBUG 23076 --- [nio-8080-exec-8] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:02:12.819+08:00 DEBUG 23076 --- [nio-8080-exec-8] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=LoginVO[token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJzdHVkZW50IiwidX (truncated)...]
+2026-06-14T00:02:12.821+08:00 DEBUG 23076 --- [nio-8080-exec-8] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:02:12.835+08:00 DEBUG 23076 --- [nio-8080-exec-9] o.s.web.servlet.DispatcherServlet        : POST "/api/exams", parameters={}
+2026-06-14T00:02:12.837+08:00 DEBUG 23076 --- [nio-8080-exec-9] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ExamController#create(Exam)
+2026-06-14T00:02:12.839+08:00 DEBUG 23076 --- [nio-8080-exec-9] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [Exam(id=null, examName=Objective Only Acceptance 2, courseId=1, teacherId=null, startTime=null, endT (truncated)...]
+2026-06-14T00:02:12.856+08:00 DEBUG 23076 --- [nio-8080-exec-9] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:02:12.857+08:00 DEBUG 23076 --- [nio-8080-exec-9] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=Exam(id=4, examName=Objective Only Acceptance 2, courseId=1,  (truncated)...]
+2026-06-14T00:02:12.861+08:00 DEBUG 23076 --- [nio-8080-exec-9] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:02:12.880+08:00 DEBUG 23076 --- [io-8080-exec-10] o.s.web.servlet.DispatcherServlet        : POST "/api/exams/4/questions/1", parameters={}
+2026-06-14T00:02:12.883+08:00 DEBUG 23076 --- [io-8080-exec-10] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ExamController#addQuestion(Long, Long)
+2026-06-14T00:02:12.939+08:00 DEBUG 23076 --- [io-8080-exec-10] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:02:12.942+08:00 DEBUG 23076 --- [io-8080-exec-10] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=null)]
+2026-06-14T00:02:12.946+08:00 DEBUG 23076 --- [io-8080-exec-10] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:02:12.965+08:00 DEBUG 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : PUT "/api/exams/4/status?status=PUBLISHED", parameters={masked}
+2026-06-14T00:02:12.967+08:00 DEBUG 23076 --- [nio-8080-exec-1] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.ExamController#status(Long, String)
+2026-06-14T00:02:12.991+08:00 DEBUG 23076 --- [nio-8080-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:02:12.993+08:00 DEBUG 23076 --- [nio-8080-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=null)]
+2026-06-14T00:02:12.998+08:00 DEBUG 23076 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:02:13.016+08:00 DEBUG 23076 --- [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : POST "/api/student-exams/4/start", parameters={}
+2026-06-14T00:02:13.019+08:00 DEBUG 23076 --- [nio-8080-exec-2] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.StudentExamController#start(Long)
+2026-06-14T00:02:13.052+08:00 DEBUG 23076 --- [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:02:13.053+08:00 DEBUG 23076 --- [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=StudentExam(id=2, studentId=3, examId=4, startTime=2026-06-14 (truncated)...]
+2026-06-14T00:02:13.058+08:00 DEBUG 23076 --- [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:02:13.079+08:00 DEBUG 23076 --- [nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : POST "/api/student-exams/submit", parameters={}
+2026-06-14T00:02:13.080+08:00 DEBUG 23076 --- [nio-8080-exec-3] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.StudentExamController#submit(SubmitExamRequest)
+2026-06-14T00:02:13.084+08:00 DEBUG 23076 --- [nio-8080-exec-3] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [SubmitExamRequest[studentExamId=2, answers=[AnswerItem[questionId=1, answer=A]]]]
+2026-06-14T00:02:13.123+08:00 DEBUG 23076 --- [nio-8080-exec-3] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:02:13.125+08:00 DEBUG 23076 --- [nio-8080-exec-3] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=StudentExam(id=2, studentId=3, examId=4, startTime=2026-06-14 (truncated)...]
+2026-06-14T00:02:13.129+08:00 DEBUG 23076 --- [nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:03:11.101+08:00 DEBUG 23076 --- [nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
+2026-06-14T00:03:11.106+08:00 DEBUG 23076 --- [nio-8080-exec-6] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.AuthController#login(LoginRequest)
+2026-06-14T00:03:11.107+08:00 DEBUG 23076 --- [nio-8080-exec-6] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [LoginRequest[username=admin, password=123456]]
+2026-06-14T00:03:11.201+08:00 DEBUG 23076 --- [nio-8080-exec-6] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:03:11.203+08:00 DEBUG 23076 --- [nio-8080-exec-6] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=LoginVO[token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhZG1pbiIsInVzZX (truncated)...]
+2026-06-14T00:03:11.204+08:00 DEBUG 23076 --- [nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:03:11.237+08:00 DEBUG 23076 --- [nio-8080-exec-7] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
+2026-06-14T00:03:11.237+08:00 DEBUG 23076 --- [nio-8080-exec-7] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.AuthController#login(LoginRequest)
+2026-06-14T00:03:11.238+08:00 DEBUG 23076 --- [nio-8080-exec-7] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [LoginRequest[username=teacher, password=123456]]
+2026-06-14T00:03:11.331+08:00 DEBUG 23076 --- [nio-8080-exec-7] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:03:11.332+08:00 DEBUG 23076 --- [nio-8080-exec-7] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=LoginVO[token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ0ZWFjaGVyIiwidX (truncated)...]
+2026-06-14T00:03:11.333+08:00 DEBUG 23076 --- [nio-8080-exec-7] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-06-14T00:03:11.337+08:00 DEBUG 23076 --- [nio-8080-exec-8] o.s.web.servlet.DispatcherServlet        : POST "/api/auth/login", parameters={}
+2026-06-14T00:03:11.337+08:00 DEBUG 23076 --- [nio-8080-exec-8] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.exam.system.controller.AuthController#login(LoginRequest)
+2026-06-14T00:03:11.338+08:00 DEBUG 23076 --- [nio-8080-exec-8] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [LoginRequest[username=student, password=123456]]
+2026-06-14T00:03:11.437+08:00 DEBUG 23076 --- [nio-8080-exec-8] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-06-14T00:03:11.438+08:00 DEBUG 23076 --- [nio-8080-exec-8] m.m.a.RequestResponseBodyMethodProcessor : Writing [Result(code=200, message=success, data=LoginVO[token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJzdHVkZW50IiwidX (truncated)...]
+2026-06-14T00:03:11.440+08:00 DEBUG 23076 --- [nio-8080-exec-8] o.s.web.servlet.DispatcherServlet        : Completed 200 OK

@@ -85,6 +85,10 @@ CREATE TABLE student_answer (
   answer TEXT,
   score DECIMAL(8,2),
   is_correct TINYINT,
+  review_status VARCHAR(20) NOT NULL,
+  review_comment VARCHAR(500),
+  reviewer_id BIGINT,
+  review_time DATETIME,
   UNIQUE KEY uk_student_answer(student_exam_id, question_id)
 );
 CREATE TABLE wrong_question (

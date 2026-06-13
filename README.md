@@ -18,6 +18,12 @@ SOURCE E:/JAVAWeb/Online Exam and Intelligent Question Bank System/exam-system-b
 SOURCE E:/JAVAWeb/Online Exam and Intelligent Question Bank System/exam-system-backend/src/main/resources/data.sql;
 ```
 
+已有旧数据库且需要保留数据时，只执行主观题批改字段迁移：
+
+```sql
+SOURCE E:/JAVAWeb/Online Exam and Intelligent Question Bank System/exam-system-backend/src/main/resources/review-migration.sql;
+```
+
 ## 启动
 
 PowerShell 设置当前终端使用的 MySQL 密码：

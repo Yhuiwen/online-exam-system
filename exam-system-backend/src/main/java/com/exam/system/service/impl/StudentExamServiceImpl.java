@@ -76,10 +76,12 @@ public class StudentExamServiceImpl implements StudentExamService {
                 pending = true;
                 studentAnswer.setScore(BigDecimal.ZERO);
                 studentAnswer.setIsCorrect(null);
+                studentAnswer.setReviewStatus("PENDING_REVIEW");
             } else {
                 boolean correct = correct(question, answer);
                 studentAnswer.setIsCorrect(correct);
                 studentAnswer.setScore(correct ? relation.getScore() : BigDecimal.ZERO);
+                studentAnswer.setReviewStatus("AUTO_GRADED");
                 if (correct) total = total.add(relation.getScore());
                 else addWrong(record, question, answer);
             }
@@ -87,7 +89,7 @@ public class StudentExamServiceImpl implements StudentExamService {
         }
         record.setSubmitTime(LocalDateTime.now());
         record.setTotalScore(total);
-        record.setStatus(pending ? "PENDING_REVIEW" : "GRADED");
+        record.setStatus(pending ? "PENDING_REVIEW" : "SUBMITTED");
         studentExamMapper.updateById(record);
         return record;
     }
