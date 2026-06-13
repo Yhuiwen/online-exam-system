@@ -69,6 +69,11 @@ public class QuestionExcelServiceImpl implements QuestionExcelService {
             validateHeader(sheet.getRow(0), formatter, evaluator);
             Set<Long> courseIds = courseMapper.selectList(new LambdaQueryWrapper<Course>().select(Course::getId))
                     .stream().map(Course::getId).collect(Collectors.toSet());
+            Set<QuestionDuplicateKey> databaseQuestions = questionMapper.selectList(
+                            new LambdaQueryWrapper<Question>()
+                                    .select(Question::getCourseId, Question::getQuestionType, Question::getContent))
+                    .stream().map(this::duplicateKey).collect(Collectors.toSet());
+            Set<QuestionDuplicateKey> excelQuestions = new HashSet<>();
             for (int index = 1; index <= sheet.getLastRowNum(); index++) {
                 Row row = sheet.getRow(index);
                 if (row == null || QuestionExcelUtil.isBlank(row, formatter, evaluator)) continue;
@@ -77,9 +82,17 @@ public class QuestionExcelServiceImpl implements QuestionExcelService {
                 try {
                     QuestionImportRow importRow = parseRow(row, formatter, evaluator);
                     validateRow(importRow, courseIds);
+                    QuestionDuplicateKey duplicateKey = duplicateKey(importRow);
+                    if (!excelQuestions.add(duplicateKey)) {
+                        throw new IllegalArgumentException("Excel 文件中存在重复题目");
+                    }
+                    if (databaseQuestions.contains(duplicateKey)) {
+                        throw new IllegalArgumentException("该课程下已存在相同题目");
+                    }
                     Question question = toEntity(importRow);
                     question.setCreateUserId(SecurityUtils.userId());
                     questionMapper.insert(question);
+                    databaseQuestions.add(duplicateKey);
                     successCount++;
                 } catch (IllegalArgumentException e) {
                     errors.add(new QuestionImportErrorVO(rowNum, e.getMessage()));
@@ -309,5 +322,16 @@ public class QuestionExcelServiceImpl implements QuestionExcelService {
 
     private String emptyToNull(String value) {
         return hasText(value) ? value.trim() : null;
+    }
+
+    private QuestionDuplicateKey duplicateKey(QuestionImportRow row) {
+        return new QuestionDuplicateKey(row.getCourseId(), row.getQuestionType(), row.getContent());
+    }
+
+    private QuestionDuplicateKey duplicateKey(Question question) {
+        return new QuestionDuplicateKey(question.getCourseId(), question.getQuestionType(), question.getContent());
+    }
+
+    private record QuestionDuplicateKey(Long courseId, String questionType, String content) {
     }
 }
