@@ -37,6 +37,17 @@ const riskLevelMap = {
   HIGH: '高风险'
 }
 
+const userRoleMap = {
+  ADMIN: '管理员',
+  TEACHER: '教师',
+  STUDENT: '学生'
+}
+
+const userStatusMap = {
+  1: '启用',
+  0: '禁用'
+}
+
 function format(map, value) {
   return map[value] ?? value
 }
@@ -47,3 +58,5 @@ export const formatExamStatus = value => format(examStatusMap, value)
 export const formatStudentExamStatus = value => format(studentExamStatusMap, value)
 export const formatReviewStatus = value => format(reviewStatusMap, value)
 export const formatRiskLevel = value => format(riskLevelMap, value)
+export const formatUserRole = value => format(userRoleMap, value)
+export const formatUserStatus = value => format(userStatusMap, value)
