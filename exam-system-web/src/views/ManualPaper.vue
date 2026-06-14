@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getExam } from '../api/exam'
 import { getManualQuestions, getPaperPreview, saveManualPaper } from '../api/paper'
+import { formatDifficulty, formatQuestionType } from '../utils/enumMap'
 
 const route = useRoute()
 const router = useRouter()
@@ -29,13 +30,6 @@ const typeOptions = [
   ['FILL_BLANK', '填空题'],
   ['SHORT_ANSWER', '简答题']
 ]
-
-const typeLabels = Object.fromEntries(typeOptions)
-const difficultyLabels = {
-  EASY: '简单',
-  MEDIUM: '中等',
-  HARD: '困难'
-}
 
 const selectedIds = computed(() => new Set(selectedQuestions.value.map(item => item.questionId)))
 const localTotalScore = computed(() =>
@@ -240,10 +234,10 @@ onMounted(loadPage)
       <el-table v-loading="loading" :data="questionRows" empty-text="没有符合条件的题目">
         <el-table-column prop="content" label="题目内容" min-width="300" show-overflow-tooltip />
         <el-table-column label="题型" width="105">
-          <template #default="{ row }">{{ typeLabels[row.questionType] || row.questionType }}</template>
+          <template #default="{ row }">{{ formatQuestionType(row.questionType) }}</template>
         </el-table-column>
         <el-table-column label="难度" width="80">
-          <template #default="{ row }">{{ difficultyLabels[row.difficulty] || row.difficulty }}</template>
+          <template #default="{ row }">{{ formatDifficulty(row.difficulty) }}</template>
         </el-table-column>
         <el-table-column prop="defaultScore" label="默认分值" width="90" />
         <el-table-column prop="knowledgeTag" label="知识点标签" width="130">
@@ -290,7 +284,7 @@ onMounted(loadPage)
         </el-table-column>
         <el-table-column prop="content" label="题目内容" min-width="300" show-overflow-tooltip />
         <el-table-column label="题型" width="110">
-          <template #default="{ row }">{{ typeLabels[row.questionType] || row.questionType }}</template>
+          <template #default="{ row }">{{ formatQuestionType(row.questionType) }}</template>
         </el-table-column>
         <el-table-column label="分值" width="130">
           <template #default="{ row }">

@@ -6,6 +6,7 @@ import {
   getExamViolationSummary,
   getStudentExamViolations
 } from '../api/examViolation'
+import { formatRiskLevel } from '../utils/enumMap'
 
 const exams = ref([])
 const examId = ref(null)
@@ -23,13 +24,6 @@ const countFields = {
   COPY: 'copyCount',
   PASTE: 'pasteCount',
   RIGHT_CLICK: 'rightClickCount'
-}
-
-const riskLabels = {
-  NORMAL: '正常',
-  LOW: '低风险',
-  MEDIUM: '中风险',
-  HIGH: '高风险'
 }
 
 const riskTagTypes = {
@@ -155,7 +149,7 @@ onMounted(async () => {
         <el-table-column label="风险等级" width="100">
           <template #default="{ row }">
             <el-tag :type="riskTagTypes[row.riskLevel] || 'info'">
-              {{ riskLabels[row.riskLevel] || row.riskLevel }}
+              {{ formatRiskLevel(row.riskLevel) }}
             </el-tag>
           </template>
         </el-table-column>

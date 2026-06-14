@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { getExams } from '../api/exam'
 import { getPendingReviews, getReviewDetail, reviewAnswer } from '../api/review'
 import { ElMessage } from 'element-plus'
+import { formatQuestionType, formatReviewStatus } from '../utils/enumMap'
 
 const exams = ref([])
 const examId = ref(null)
@@ -91,7 +92,7 @@ onMounted(async () => {
         <section v-for="(item, index) in detail.questions" :key="item.questionId" class="answer-block">
           <div class="question-title">
             <strong>{{ index + 1 }}. {{ item.content }}</strong>
-            <el-tag>{{ item.questionType }}</el-tag>
+            <el-tag>{{ formatQuestionType(item.questionType) }}</el-tag>
             <span>{{ item.score ?? 0 }} / {{ item.maxScore }} 分</span>
           </div>
           <el-descriptions :column="1" border>
@@ -119,7 +120,7 @@ onMounted(async () => {
               </el-form-item>
             </el-form>
             <el-tag :type="item.reviewStatus === 'REVIEWED' ? 'success' : 'warning'">
-              {{ item.reviewStatus === 'REVIEWED' ? '已批改' : '待批改' }}
+              {{ formatReviewStatus(item.reviewStatus) }}
             </el-tag>
           </div>
         </section>

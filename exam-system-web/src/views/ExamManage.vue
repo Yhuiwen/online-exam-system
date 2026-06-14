@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { createExam, getExamQuestions, getExams, updateExamStatus } from '../api/exam'
 import { getCourses } from '../api/course'
 import { ElMessage } from 'element-plus'
+import { formatExamStatus, formatQuestionType } from '../utils/enumMap'
 
 const router = useRouter()
 const rows = ref([])
@@ -88,7 +89,9 @@ onMounted(async () => {
         <el-table-column prop="examName" label="考试名称" min-width="180" />
         <el-table-column prop="durationMinutes" label="时长(分钟)" width="110" />
         <el-table-column prop="totalScore" label="总分" width="80" />
-        <el-table-column prop="status" label="状态" width="110" />
+        <el-table-column label="状态" width="110">
+          <template #default="{ row }">{{ formatExamStatus(row.status) }}</template>
+        </el-table-column>
         <el-table-column label="操作" min-width="430" fixed="right">
           <template #default="{ row }">
             <el-button link @click="showQuestions(row.id)">查看题目</el-button>
@@ -178,7 +181,9 @@ onMounted(async () => {
       <el-table :data="questions">
         <el-table-column type="index" width="55" />
         <el-table-column prop="content" label="题目" />
-        <el-table-column prop="questionType" label="题型" width="150" />
+        <el-table-column label="题型" width="150">
+          <template #default="{ row }">{{ formatQuestionType(row.questionType) }}</template>
+        </el-table-column>
         <el-table-column prop="score" label="分值" width="70" />
       </el-table>
     </el-dialog>

@@ -12,6 +12,7 @@ import {
 import { getCourses } from '../api/course'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Download, Upload } from '@element-plus/icons-vue'
+import { formatDifficulty, formatQuestionType } from '../utils/enumMap'
 
 const rows = ref([])
 const courses = ref([])
@@ -194,8 +195,12 @@ onMounted(async () => {
     <div class="panel">
       <el-table :data="rows">
         <el-table-column prop="content" label="题目" min-width="300" show-overflow-tooltip />
-        <el-table-column prop="questionType" label="题型" width="150" />
-        <el-table-column prop="difficulty" label="难度" width="100" />
+        <el-table-column label="题型" width="150">
+          <template #default="{ row }">{{ formatQuestionType(row.questionType) }}</template>
+        </el-table-column>
+        <el-table-column label="难度" width="100">
+          <template #default="{ row }">{{ formatDifficulty(row.difficulty) }}</template>
+        </el-table-column>
         <el-table-column prop="knowledgeTag" label="知识点" width="140" />
         <el-table-column prop="score" label="分值" width="80" />
         <el-table-column label="操作" width="140">

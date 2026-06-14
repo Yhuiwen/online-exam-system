@@ -2,26 +2,13 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getPaperPreview } from '../api/paper'
+import { formatDifficulty, formatQuestionType } from '../utils/enumMap'
 
 const route = useRoute()
 const router = useRouter()
 const examId = computed(() => Number(route.params.examId))
 const preview = ref(null)
 const loading = ref(false)
-
-const typeLabels = {
-  SINGLE_CHOICE: '单选题',
-  MULTIPLE_CHOICE: '多选题',
-  TRUE_FALSE: '判断题',
-  FILL_BLANK: '填空题',
-  SHORT_ANSWER: '简答题'
-}
-
-const difficultyLabels = {
-  EASY: '简单',
-  MEDIUM: '中等',
-  HARD: '困难'
-}
 
 function parseOptions(question) {
   const source = question.optionsJson ?? question.options_json
@@ -87,8 +74,8 @@ onMounted(loadPreview)
           <header class="question-header">
             <strong>{{ index + 1 }}. {{ question.content }}</strong>
             <div class="question-tags">
-              <el-tag>{{ typeLabels[question.questionType] || question.questionType }}</el-tag>
-              <el-tag type="info">{{ difficultyLabels[question.difficulty] || question.difficulty }}</el-tag>
+              <el-tag>{{ formatQuestionType(question.questionType) }}</el-tag>
+              <el-tag type="info">{{ formatDifficulty(question.difficulty) }}</el-tag>
               <span>{{ question.score }} 分</span>
             </div>
           </header>
