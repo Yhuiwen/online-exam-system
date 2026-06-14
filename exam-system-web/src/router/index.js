@@ -19,6 +19,7 @@ const routes = [
       { path: 'teacher/monitor', component: () => import('../views/ExamMonitor.vue'), meta: { roles: ['ADMIN', 'TEACHER'] } },
       { path: 'student-exams', component: () => import('../views/StudentExamList.vue'), meta: { roles: ['STUDENT'] } },
       { path: 'online-exam/:id', component: () => import('../views/OnlineExam.vue'), meta: { roles: ['STUDENT'] } },
+      { path: 'civil-service-skill', component: () => import('../views/CivilServiceSkill.vue'), meta: { roles: ['STUDENT'] } },
       { path: 'scores', component: () => import('../views/ScoreQuery.vue'), meta: { roles: ['STUDENT'] } },
       { path: 'wrong-questions', component: () => import('../views/WrongQuestion.vue'), meta: { roles: ['STUDENT'] } },
       { path: 'statistics', component: () => import('../views/Statistics.vue') }
