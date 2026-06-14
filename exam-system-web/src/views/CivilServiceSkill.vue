@@ -9,6 +9,7 @@ import {
   getCivilModules,
   getCivilOverview,
   getCivilPracticeQuestions,
+  getCivilPracticeTrend,
   getCivilRecommendations,
   getCivilWrongQuestions,
   markCivilWrongMastered,
@@ -20,6 +21,7 @@ const modules = ref([])
 const questions = ref([])
 const wrongRows = ref([])
 const moduleRows = ref([])
+const trendRows = ref([])
 const recommendations = ref([])
 const overview = ref({})
 const result = ref(null)
@@ -27,9 +29,11 @@ const loading = ref(false)
 const submitting = ref(false)
 const answers = ref({})
 const chartRef = ref()
+const trendChartRef = ref()
 const wrongDetailVisible = ref(false)
 const wrongDetail = ref(null)
 let moduleChart
+let trendChart
 
 const query = reactive({ moduleCode: '', difficulty: '', count: 10 })
 const selectedModule = computed(() => modules.value.find(m => m.moduleCode === query.moduleCode))
@@ -97,26 +101,78 @@ async function removeWrong(row) {
 }
 
 async function loadAnalysis() {
-  overview.value = await getCivilOverview()
-  moduleRows.value = await getCivilModuleAnalysis()
-  recommendations.value = await getCivilRecommendations()
+  const [overviewData, moduleData, trendData, recommendationData] = await Promise.all([
+    getCivilOverview(),
+    getCivilModuleAnalysis(),
+    getCivilPracticeTrend(),
+    getCivilRecommendations()
+  ])
+  overview.value = overviewData
+  moduleRows.value = moduleData
+  trendRows.value = trendData
+  recommendations.value = recommendationData
   await nextTick()
   renderChart()
 }
 
+function formatTrendTime(value) {
+  if (!value) return ''
+  const date = new Date(value.replace(' ', 'T'))
+  if (Number.isNaN(date.getTime())) return value.slice(5, 10)
+  return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
 function renderChart() {
-  if (!chartRef.value || activeTab.value !== 'analysis') return
-  moduleChart ||= echarts.init(chartRef.value)
-  moduleChart.setOption({
-    title: { text: '行测模块正确率' },
-    tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: moduleRows.value.map(x => x.moduleName) },
-    yAxis: { type: 'value', max: 100 },
-    series: [{ type: 'bar', data: moduleRows.value.map(x => x.accuracy) }]
+  if (activeTab.value !== 'analysis') return
+  if (chartRef.value) {
+    moduleChart ||= echarts.init(chartRef.value)
+    moduleChart.setOption({
+      title: { text: '行测模块正确率' },
+      tooltip: { trigger: 'axis' },
+      xAxis: { type: 'category', data: moduleRows.value.map(x => x.moduleName) },
+      yAxis: { type: 'value', max: 100 },
+      series: [{ type: 'bar', data: moduleRows.value.map(x => x.accuracy) }]
+    }, true)
+  }
+  if (!trendChartRef.value) return
+  trendChart ||= echarts.init(trendChartRef.value)
+  trendChart.setOption({
+    title: { text: '最近 7 次练习正确率趋势' },
+    tooltip: {
+      trigger: 'axis',
+      formatter(params) {
+        const index = params[0]?.dataIndex
+        const row = trendRows.value[index]
+        if (!row) return ''
+        return [
+          row.moduleName || '综合练习',
+          `正确率：${row.accuracy}%`,
+          `答题数：${row.questionCount}`,
+          `正确数：${row.correctCount}`,
+          `练习时间：${row.createTime || '-'}`
+        ].join('<br>')
+      }
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: trendRows.value.map(row => `${row.moduleName || '综合练习'} ${formatTrendTime(row.createTime)}`)
+    },
+    yAxis: { type: 'value', min: 0, max: 100 },
+    series: [{
+      name: '正确率',
+      type: 'line',
+      smooth: true,
+      symbolSize: 8,
+      data: trendRows.value.map(row => Number(row.accuracy || 0))
+    }]
   }, true)
 }
 
-function resizeChart() { moduleChart?.resize() }
+function resizeChart() {
+  moduleChart?.resize()
+  trendChart?.resize()
+}
 
 async function tabChange() {
   if (activeTab.value === 'wrong') await loadWrongQuestions()
@@ -132,6 +188,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   window.removeEventListener('resize', resizeChart)
   moduleChart?.dispose()
+  trendChart?.dispose()
 })
 </script>
 
@@ -227,6 +284,7 @@ onBeforeUnmount(() => {
           <div class="metric"><span>未掌握错题</span><strong>{{ overview.wrongCount || 0 }}</strong></div>
         </div>
         <div ref="chartRef" class="chart analysis-chart"></div>
+        <div ref="trendChartRef" class="chart analysis-chart trend-chart"></div>
         <div class="analysis-grid">
           <div class="panel">
             <h3>模块表现</h3>
@@ -290,6 +348,7 @@ onBeforeUnmount(() => {
 .result-card { margin-top: 18px; }
 .detail-table { margin-top: 18px; }
 .analysis-chart { margin-top: 18px; }
+.trend-chart { margin-top: 24px; }
 .analysis-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 18px; margin-top: 18px; }
 .tip + .tip { margin-top: 10px; }
 .detail-content { line-height: 1.7; white-space: pre-wrap; }
