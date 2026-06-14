@@ -28,7 +28,10 @@ public class ExamServiceImpl implements ExamService {
     @Override
     @Transactional
     public List<Question> autoPaper(Long examId, AutoPaperRequest r) {
-        if (examMapper.selectById(examId) == null) throw new BusinessException("考试不存在");
+        Exam exam = examMapper.selectById(examId);
+        if (exam == null) throw new BusinessException("考试不存在");
+        if (!"DRAFT".equals(exam.getStatus())) throw new BusinessException("考试已发布，禁止修改试卷");
+        if (!exam.getCourseId().equals(r.courseId())) throw new BusinessException("组卷课程与考试课程不一致");
         double ratio = r.easyRatio() + r.mediumRatio() + r.hardRatio();
         if (Math.abs(ratio - 1.0) > 0.001 && Math.abs(ratio - 100.0) > 0.001) {
             throw new BusinessException("难度比例之和必须为 1 或 100");
@@ -64,7 +67,6 @@ public class ExamServiceImpl implements ExamService {
             examQuestionMapper.insert(eq);
             totalScore = totalScore.add(q.getScore());
         }
-        Exam exam = examMapper.selectById(examId);
         exam.setTotalScore(totalScore.setScale(2, RoundingMode.HALF_UP));
         examMapper.updateById(exam);
         return selected;

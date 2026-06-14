@@ -57,11 +57,15 @@ public class ExamController {
     @PostMapping("/{id}/questions/{questionId}")
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
     public Result<Void> addQuestion(@PathVariable Long id, @PathVariable Long questionId) {
+        Exam exam = mapper.selectById(id);
+        if (exam == null) throw new BusinessException("考试不存在");
+        if (!"DRAFT".equals(exam.getStatus())) throw new BusinessException("考试已发布，禁止修改试卷");
         if (examQuestionMapper.selectCount(new LambdaQueryWrapper<ExamQuestion>()
                 .eq(ExamQuestion::getExamId, id).eq(ExamQuestion::getQuestionId, questionId)) > 0)
             throw new BusinessException("题目已在试卷中");
         Question question = questionMapper.selectById(questionId);
         if (question == null) throw new BusinessException("题目不存在");
+        if (!exam.getCourseId().equals(question.getCourseId())) throw new BusinessException("题目不属于当前考试课程");
         long count = examQuestionMapper.selectCount(new LambdaQueryWrapper<ExamQuestion>().eq(ExamQuestion::getExamId, id));
         ExamQuestion relation = new ExamQuestion();
         relation.setExamId(id); relation.setQuestionId(questionId); relation.setSortNo((int) count + 1); relation.setScore(question.getScore());

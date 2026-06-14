@@ -12,7 +12,7 @@ const menus = computed(() => {
     { path: '/users', label: '用户管理', icon: User, roles: ['ADMIN'] },
     { path: '/courses', label: '课程管理', icon: Reading, roles: ['ADMIN','TEACHER'] },
     { path: '/questions', label: '题库管理', icon: EditPen, roles: ['TEACHER'] },
-    { path: '/exams', label: '考试管理', icon: Document, roles: ['TEACHER'] },
+    { path: '/exams', label: '考试管理', icon: Document, roles: ['ADMIN','TEACHER'] },
     { path: '/teacher/review', label: '主观题批改', icon: EditPen, roles: ['TEACHER'] },
     { path: '/teacher/monitor', label: '考试监控', icon: Monitor, roles: ['ADMIN','TEACHER'] },
     { path: '/student-exams', label: '参加考试', icon: Tickets, roles: ['STUDENT'] },
