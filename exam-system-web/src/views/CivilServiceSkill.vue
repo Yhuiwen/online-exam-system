@@ -27,6 +27,8 @@ const loading = ref(false)
 const submitting = ref(false)
 const answers = ref({})
 const chartRef = ref()
+const wrongDetailVisible = ref(false)
+const wrongDetail = ref(null)
 let moduleChart
 
 const query = reactive({ moduleCode: '', difficulty: '', count: 10 })
@@ -38,6 +40,11 @@ function parseOptions(json) {
 
 function optionLetter(index) {
   return String.fromCharCode(65 + index)
+}
+
+function showWrongDetail(row) {
+  wrongDetail.value = row
+  wrongDetailVisible.value = true
 }
 
 async function loadQuestions() {
@@ -201,8 +208,9 @@ onBeforeUnmount(() => {
             <el-table-column prop="correctAnswer" label="正确答案" width="110" />
             <el-table-column prop="wrongCount" label="错误次数" width="100" />
             <el-table-column prop="lastWrongTime" label="最近错误时间" width="180" />
-            <el-table-column label="操作" width="170">
+            <el-table-column label="操作" width="240">
               <template #default="{ row }">
+                <el-button link type="primary" @click="showWrongDetail(row)">查看解析</el-button>
                 <el-button link type="primary" @click="markMastered(row)">已掌握</el-button>
                 <el-button link type="danger" @click="removeWrong(row)">删除</el-button>
               </template>
@@ -239,6 +247,35 @@ onBeforeUnmount(() => {
         </div>
       </el-tab-pane>
     </el-tabs>
+
+    <el-dialog v-model="wrongDetailVisible" title="错题解析" width="680px">
+      <template v-if="wrongDetail">
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="题型">{{ formatQuestionType(wrongDetail.questionType) }}</el-descriptions-item>
+          <el-descriptions-item label="难度">{{ formatDifficulty(wrongDetail.difficulty) }}</el-descriptions-item>
+          <el-descriptions-item label="题干" :span="2">
+            <div class="detail-content">{{ wrongDetail.content }}</div>
+          </el-descriptions-item>
+          <el-descriptions-item v-if="parseOptions(wrongDetail.optionsJson).length" label="选项" :span="2">
+            <div class="detail-options">
+              <div v-for="(option, index) in parseOptions(wrongDetail.optionsJson)" :key="index">
+                {{ optionLetter(index) }}. {{ option }}
+              </div>
+            </div>
+          </el-descriptions-item>
+          <el-descriptions-item label="我的答案">{{ wrongDetail.userAnswer || '未作答' }}</el-descriptions-item>
+          <el-descriptions-item label="正确答案">{{ wrongDetail.correctAnswer || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="错误次数">{{ wrongDetail.wrongCount || 0 }}</el-descriptions-item>
+          <el-descriptions-item label="最近错误时间">{{ wrongDetail.lastWrongTime || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="解析" :span="2">
+            <div class="detail-content">{{ wrongDetail.analysis || '暂无解析' }}</div>
+          </el-descriptions-item>
+        </el-descriptions>
+      </template>
+      <template #footer>
+        <el-button @click="wrongDetailVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -255,5 +292,7 @@ onBeforeUnmount(() => {
 .analysis-chart { margin-top: 18px; }
 .analysis-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 18px; margin-top: 18px; }
 .tip + .tip { margin-top: 10px; }
+.detail-content { line-height: 1.7; white-space: pre-wrap; }
+.detail-options { display: grid; gap: 6px; line-height: 1.6; }
 @media (max-width: 900px) { .analysis-grid { grid-template-columns: 1fr; } .question-head { align-items: flex-start; flex-direction: column; } }
 </style>

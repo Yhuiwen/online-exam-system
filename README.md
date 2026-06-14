@@ -69,6 +69,13 @@
 - 成绩与答题详情查询
 - 错题自动记录与解析查看
 
+### 公考刷题与错题分析 Skill
+
+- 按言语理解、数量关系、判断推理、资料分析和常识判断模块专项刷题
+- 自动记录公考错题、错误次数与最近错误时间，并支持查看完整题目解析
+- 统计总体正确率及各模块正确率，帮助定位薄弱模块
+- 根据练习结果、模块表现和未掌握错题生成针对性复习建议
+
 ### 批改与统计
 
 - 教师查询待批改答卷
@@ -163,15 +170,19 @@ mysql -uroot -p --default-character-set=utf8mb4
 ```sql
 SOURCE schema.sql;
 SOURCE data.sql;
+SOURCE civil-service-skill-migration.sql;
 ```
 
 `schema.sql` 会创建 `exam_system` 数据库及项目所需数据表，`data.sql` 会写入演示账号、课程、题目和考试数据。
+
+`civil-service-skill-migration.sql` 会动态查找或创建“公务员考试”课程，初始化公考练习、答题和错题分析表，并写入 25 道示例题。脚本按课程、题型和题干检测已有题目，可重复执行而不会重复插入示例数据。
 
 已有数据库需要保留数据时，请根据实际功能增量执行迁移脚本：
 
 ```sql
 SOURCE review-migration.sql;
 SOURCE violation-migration.sql;
+SOURCE civil-service-skill-migration.sql;
 ```
 
 > 请使用本机 MySQL 密码登录。README 和代码仓库中不应保存生产数据库密码。
@@ -326,6 +337,8 @@ npm run build
 - 客观题自动判分与主观题人工批改协同，确保成绩状态准确
 - 前后端双重异常上报限制与考试风险等级统计
 - ECharts 展示成绩分布、题目正确率和学生成绩趋势
+- 公考专项模块覆盖模块化刷题、错题解析、错误频次追踪和掌握状态管理
+- 公考分析按模块统计正确率并识别薄弱项，结合练习数据自动生成复习建议
 - 统一响应、业务异常处理和前端枚举格式化，降低前后端耦合
 
 ## 后续优化方向
