@@ -16,6 +16,7 @@ const menus = computed(() => {
     { path: '/teacher/review', label: '主观题批改', icon: EditPen, roles: ['TEACHER'] },
     { path: '/teacher/monitor', label: '考试监控', icon: Monitor, roles: ['ADMIN','TEACHER'] },
     { path: '/student-exams', label: '参加考试', icon: Tickets, roles: ['STUDENT'] },
+    { path: '/civil-service-skill', label: '公考刷题', icon: Reading, roles: ['STUDENT'] },
     { path: '/scores', label: '成绩查询', icon: List, roles: ['STUDENT'] },
     { path: '/wrong-questions', label: '错题本', icon: EditPen, roles: ['STUDENT'] },
     { path: '/statistics', label: '统计分析', icon: DataAnalysis, roles: ['ADMIN','TEACHER','STUDENT'] }
