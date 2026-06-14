@@ -8,4 +8,5 @@ export const markCivilWrongMastered = id => request.put(`/civil-service/wrong-qu
 export const deleteCivilWrongQuestion = id => request.delete(`/civil-service/wrong-questions/${id}`)
 export const getCivilOverview = () => request.get('/civil-service/analysis/overview')
 export const getCivilModuleAnalysis = () => request.get('/civil-service/analysis/modules')
+export const getCivilPracticeTrend = () => request.get('/civil-service/analysis/trend')
 export const getCivilRecommendations = () => request.get('/civil-service/recommendations')

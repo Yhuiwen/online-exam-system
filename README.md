@@ -327,6 +327,24 @@ npm run build
 
 ![考试监控](docs/images/exam-monitor.png)
 
+### 公考刷题与错题分析 Skill
+
+按行测模块选择题目并进行专项练习。
+
+![公考模块刷题](docs/images/civil-practice.png)
+
+提交练习后查看正确率、答题结果与题目解析。
+
+![公考练习结果](docs/images/civil-practice-result.png)
+
+在公考错题本中查看个人答案、正确答案和详细解析。
+
+![公考错题解析](docs/images/civil-wrong-detail.png)
+
+通过模块正确率和最近练习趋势分析薄弱环节。
+
+![公考分析建议](docs/images/civil-analysis.png)
+
 ## 项目亮点
 
 - 完整覆盖“题库、组卷、发布、答题、判分、批改、统计”的考试业务闭环

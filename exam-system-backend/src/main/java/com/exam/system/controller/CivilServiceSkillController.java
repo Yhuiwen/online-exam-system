@@ -176,6 +176,29 @@ public class CivilServiceSkillController {
         return Result.success(buildModuleAnalysis());
     }
 
+    @GetMapping("/analysis/trend")
+    public Result<List<Map<String, Object>>> trend() {
+        List<CivilPracticeSession> sessions = sessionMapper.selectList(
+                new LambdaQueryWrapper<CivilPracticeSession>()
+                        .eq(CivilPracticeSession::getStudentId, SecurityUtils.userId())
+                        .orderByDesc(CivilPracticeSession::getCreateTime)
+                        .last("LIMIT 7")
+        );
+        Collections.reverse(sessions);
+        return Result.success(sessions.stream().map(session -> {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("sessionId", session.getId());
+            item.put("moduleCode", session.getModuleCode());
+            item.put("moduleName", session.getModuleName());
+            item.put("questionCount", session.getQuestionCount());
+            item.put("correctCount", session.getCorrectCount());
+            item.put("accuracy", session.getAccuracy());
+            item.put("durationSeconds", session.getDurationSeconds());
+            item.put("createTime", session.getCreateTime());
+            return item;
+        }).toList());
+    }
+
     @GetMapping("/recommendations")
     public Result<List<String>> recommendations() {
         List<Map<String, Object>> analysis = buildModuleAnalysis();
