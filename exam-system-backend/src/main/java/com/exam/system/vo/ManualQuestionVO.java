@@ -14,5 +14,7 @@ public record ManualQuestionVO(
         String knowledgeTag,
         boolean selected,
         BigDecimal selectedScore,
-        Integer sortNo) {
+        Integer sortNo,
+        String sourceCategory,
+        String sourceSummary) {
 }

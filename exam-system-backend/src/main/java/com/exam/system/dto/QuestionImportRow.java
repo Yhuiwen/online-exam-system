@@ -16,4 +16,10 @@ public class QuestionImportRow {
     private String difficulty;
     private BigDecimal score;
     private String knowledgeTag;
+    private String sourceCategory;
+    private Integer examYear;
+    private String examScope;
+    private String province;
+    private String paperType;
+    private String sourceRef;
 }

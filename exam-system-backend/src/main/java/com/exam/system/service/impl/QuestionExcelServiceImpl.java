@@ -1,6 +1,7 @@
 package com.exam.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.exam.system.constant.QuestionSourceCategory;
 import com.exam.system.dto.QuestionImportRow;
 import com.exam.system.entity.Course;
 import com.exam.system.entity.Question;
@@ -10,6 +11,7 @@ import com.exam.system.mapper.QuestionMapper;
 import com.exam.system.security.SecurityUtils;
 import com.exam.system.service.QuestionExcelService;
 import com.exam.system.util.QuestionExcelUtil;
+import com.exam.system.util.QuestionSourceValidator;
 import com.exam.system.vo.QuestionImportErrorVO;
 import com.exam.system.vo.QuestionImportResultVO;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -36,6 +38,10 @@ public class QuestionExcelServiceImpl implements QuestionExcelService {
     );
     private static final Set<String> DIFFICULTIES = Set.of("EASY", "MEDIUM", "HARD");
     private static final Set<String> OPTION_KEYS = Set.of("A", "B", "C", "D");
+    private static final Set<String> EXAM_SCOPES = Set.of("NATIONAL", "PROVINCIAL");
+    private static final Set<String> CIVIL_MODULES = Set.of(
+            "言语理解", "数量关系", "判断推理", "资料分析", "常识判断"
+    );
 
     private final QuestionMapper questionMapper;
     private final CourseMapper courseMapper;
@@ -48,6 +54,13 @@ public class QuestionExcelServiceImpl implements QuestionExcelService {
             DataValidationHelper helper = sheet.getDataValidationHelper();
             addListValidation(sheet, helper, 1, 500, 1, QUESTION_TYPES.toArray(String[]::new));
             addListValidation(sheet, helper, 1, 500, 9, DIFFICULTIES.toArray(String[]::new));
+            addListValidation(sheet, helper, 1, 500, 11, CIVIL_MODULES.toArray(String[]::new));
+            addListValidation(sheet, helper, 1, 500, QuestionExcelUtil.COL_SOURCE_CATEGORY,
+                    new String[]{"真题", "模拟题", "自命题", "练习题", "REAL_EXAM", "MOCK_EXAM", "SELF_AUTHORED", "PRACTICE"});
+            addListValidation(sheet, helper, 1, 500, QuestionExcelUtil.COL_EXAM_SCOPE,
+                    new String[]{"NATIONAL", "PROVINCIAL", "国考", "省考"});
+            writeSampleSheet(workbook);
+            writeInstructionSheet(workbook);
             workbook.write(outputStream);
         } catch (Exception e) {
             throw new BusinessException("生成题库模板失败");
@@ -109,11 +122,21 @@ public class QuestionExcelServiceImpl implements QuestionExcelService {
 
     @Override
     public void exportQuestions(Long courseId, String questionType, String difficulty, String keyword,
+                                String sourceCategory, String examScope, Integer examYear, String province,
                                 OutputStream outputStream) {
         LambdaQueryWrapper<Question> query = new LambdaQueryWrapper<Question>()
                 .eq(courseId != null, Question::getCourseId, courseId)
                 .eq(hasText(questionType), Question::getQuestionType, questionType)
                 .eq(hasText(difficulty), Question::getDifficulty, difficulty)
+                .eq(sourceCategory != null && !sourceCategory.isBlank()
+                                && !QuestionSourceCategory.PRACTICE.equals(QuestionSourceCategory.normalize(sourceCategory)),
+                        Question::getSourceCategory, QuestionSourceCategory.storedValue(sourceCategory))
+                .isNull(sourceCategory != null && !sourceCategory.isBlank()
+                                && QuestionSourceCategory.PRACTICE.equals(QuestionSourceCategory.normalize(sourceCategory)),
+                        Question::getSourceCategory)
+                .eq(examYear != null, Question::getExamYear, examYear)
+                .eq(hasText(examScope), Question::getExamScope, normalizeExamScope(examScope))
+                .eq(hasText(province), Question::getProvince, province)
                 .and(hasText(keyword), wrapper -> wrapper.like(Question::getContent, keyword)
                         .or().like(Question::getKnowledgeTag, keyword))
                 .orderByAsc(Question::getId);
@@ -133,6 +156,12 @@ public class QuestionExcelServiceImpl implements QuestionExcelService {
                 setCell(row, 9, question.getDifficulty());
                 setCell(row, 10, question.getScore());
                 setCell(row, 11, question.getKnowledgeTag());
+                setCell(row, QuestionExcelUtil.COL_SOURCE_CATEGORY, categoryLabel(question.getSourceCategory()));
+                setCell(row, QuestionExcelUtil.COL_EXAM_YEAR, question.getExamYear());
+                setCell(row, QuestionExcelUtil.COL_EXAM_SCOPE, scopeLabel(question.getExamScope()));
+                setCell(row, QuestionExcelUtil.COL_PROVINCE, question.getProvince());
+                setCell(row, QuestionExcelUtil.COL_PAPER_TYPE, question.getPaperType());
+                setCell(row, QuestionExcelUtil.COL_SOURCE_REF, question.getSourceRef());
             }
             workbook.write(outputStream);
         } catch (Exception e) {
@@ -192,6 +221,12 @@ public class QuestionExcelServiceImpl implements QuestionExcelService {
             throw new IllegalArgumentException("分值必须是数字");
         }
         result.setKnowledgeTag(QuestionExcelUtil.cellText(row, 11, formatter, evaluator));
+        result.setSourceCategory(QuestionExcelUtil.cellText(row, QuestionExcelUtil.COL_SOURCE_CATEGORY, formatter, evaluator));
+        result.setExamYear(parseExamYear(QuestionExcelUtil.cellText(row, QuestionExcelUtil.COL_EXAM_YEAR, formatter, evaluator)));
+        result.setExamScope(normalizeExamScope(QuestionExcelUtil.cellText(row, QuestionExcelUtil.COL_EXAM_SCOPE, formatter, evaluator)));
+        result.setProvince(emptyToNull(QuestionExcelUtil.cellText(row, QuestionExcelUtil.COL_PROVINCE, formatter, evaluator)));
+        result.setPaperType(emptyToNull(QuestionExcelUtil.cellText(row, QuestionExcelUtil.COL_PAPER_TYPE, formatter, evaluator)));
+        result.setSourceRef(emptyToNull(QuestionExcelUtil.cellText(row, QuestionExcelUtil.COL_SOURCE_REF, formatter, evaluator)));
         return result;
     }
 
@@ -215,6 +250,28 @@ public class QuestionExcelServiceImpl implements QuestionExcelService {
             case "SHORT_ANSWER" -> row.setAnswer(row.getAnswer() == null ? "" : row.getAnswer().trim());
             default -> throw new IllegalArgumentException("题型不合法");
         }
+        validateSourceFields(row);
+    }
+
+    private void validateSourceFields(QuestionImportRow row) {
+        Question question = new Question();
+        question.setSourceCategory(row.getSourceCategory());
+        question.setExamYear(row.getExamYear());
+        question.setExamScope(row.getExamScope());
+        question.setProvince(row.getProvince());
+        question.setPaperType(row.getPaperType());
+        question.setSourceRef(row.getSourceRef());
+        try {
+            QuestionSourceValidator.validateAndNormalize(question);
+        } catch (BusinessException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
+        row.setSourceCategory(question.getSourceCategory());
+        row.setExamYear(question.getExamYear());
+        row.setExamScope(question.getExamScope());
+        row.setProvince(question.getProvince());
+        row.setPaperType(question.getPaperType());
+        row.setSourceRef(question.getSourceRef());
     }
 
     private void validateSingleChoice(QuestionImportRow row) {
@@ -277,7 +334,117 @@ public class QuestionExcelServiceImpl implements QuestionExcelService {
         question.setDifficulty(row.getDifficulty());
         question.setScore(row.getScore());
         question.setKnowledgeTag(emptyToNull(row.getKnowledgeTag()));
+        question.setSourceCategory(row.getSourceCategory());
+        question.setExamYear(row.getExamYear());
+        question.setExamScope(row.getExamScope());
+        question.setProvince(row.getProvince());
+        question.setPaperType(row.getPaperType());
+        question.setSourceRef(row.getSourceRef());
         return question;
+    }
+
+    private void writeSampleSheet(XSSFWorkbook workbook) {
+        Sheet sheet = workbook.createSheet("示例数据");
+        Row header = sheet.createRow(0);
+        for (int i = 0; i < QuestionExcelUtil.HEADERS.size(); i++) {
+            header.createCell(i).setCellValue(QuestionExcelUtil.HEADERS.get(i));
+        }
+        Long civilCourseId = courseMapper.selectList(new LambdaQueryWrapper<Course>()
+                        .eq(Course::getCourseName, "公务员考试")
+                        .select(Course::getId)
+                        .last("LIMIT 1"))
+                .stream().map(Course::getId).findFirst().orElse(2L);
+        Object[][] samples = {
+                {civilCourseId, "SINGLE_CHOICE", "示例：推进数字政府建设，下列做法最符合“放管服”改革方向的是？",
+                        "减少审批材料并推进一网通办", "增加审批环节", "限制数据共享", "取消政务公开",
+                        "A", "减少材料、推进一网通办体现简政放权与优化服务。", "MEDIUM", 1, "常识判断",
+                        "真题", 2024, "国考", "全国", "地市级", "公开资料整理"},
+                {civilCourseId, "SINGLE_CHOICE", "示例：某项目原计划12天完成，前4天完成1/3，按此效率还需多少天？",
+                        "6", "7", "8", "9",
+                        "C", "前4天效率1/36，剩余2/3需8天。", "MEDIUM", 1, "数量关系",
+                        "真题", 2024, "省考", "广东", "县级", "公开资料整理"},
+                {civilCourseId, "SINGLE_CHOICE", "示例：下列关于行政复议的说法，正确的是？",
+                        "复议机关不得收取任何费用", "复议必须缴费", "复议不受理申诉", "复议仅限口头申请",
+                        "A", "行政复议原则上不收费。", "MEDIUM", 1, "常识判断",
+                        "模拟题", "", "", "", "华图2024冲刺卷", "华图教育模拟卷"},
+                {civilCourseId, "SHORT_ANSWER", "示例：简述你对“数字素养”的理解。",
+                        "", "", "", "",
+                        "言之有理即可", "考查信息获取、处理与表达能力。", "EASY", 5, "常识判断",
+                        "自命题", "", "", "", "", "本校2024期末自编"}
+        };
+        for (int i = 0; i < samples.length; i++) {
+            Row row = sheet.createRow(i + 1);
+            Object[] values = samples[i];
+            for (int col = 0; col < values.length; col++) {
+                setCell(row, col, values[col]);
+            }
+        }
+        for (int i = 0; i < QuestionExcelUtil.HEADERS.size(); i++) {
+            sheet.setColumnWidth(i, i == 2 || i == 8 ? 9000 : 4200);
+        }
+    }
+
+    private void writeInstructionSheet(XSSFWorkbook workbook) {
+        Sheet sheet = workbook.createSheet("填写说明");
+        List<String> lines = List.of(
+                "题库 Excel 批量导入说明",
+                "",
+                "1. 必填列：课程ID、题型、题目内容、正确答案、难度、分值。",
+                "2. 题型可选：SINGLE_CHOICE、MULTIPLE_CHOICE、TRUE_FALSE、FILL_BLANK、SHORT_ANSWER。",
+                "3. 难度可选：EASY、MEDIUM、HARD。",
+                "4. 单选题答案填 A/B/C/D；多选题填 A,C；判断题填 TRUE/FALSE 或 正确/错误。",
+                "",
+                "题目分类（精细来源管理）：",
+                "- 练习题：普通练习题，来源列可全部留空",
+                "- 真题：需填写年份、考试类型、省份、来源说明；省考必须写省份，国考省份可填“全国”",
+                "- 模拟题：需填写来源说明（如 华图2024冲刺卷）；年份、卷别可选",
+                "- 自命题：需填写来源说明（如 本校期末自编）；其余来源列留空",
+                "",
+                "真题/模拟题附加字段：",
+                "- 年份：如 2024、2023",
+                "- 考试类型：国考 或 省考（也可填 NATIONAL / PROVINCIAL）",
+                "- 省份：国考填“全国”；省考填具体省份，如 广东、浙江",
+                "- 卷别：如 地市级、副省级、行政执法、县级、B卷、通用",
+                "- 来源说明：如 公开资料整理、机构回忆版、某某出版社模拟卷",
+                "",
+                "知识点标签（公考题库建议填写）：言语理解、数量关系、判断推理、资料分析、常识判断",
+                "",
+                "请参考“示例数据”工作表填写，实际导入仅读取“题库导入模板”工作表。"
+        );
+        for (int i = 0; i < lines.size(); i++) {
+            Row row = sheet.createRow(i);
+            row.createCell(0).setCellValue(lines.get(i));
+        }
+        sheet.setColumnWidth(0, 18000);
+    }
+
+    private Integer parseExamYear(String value) {
+        if (!hasText(value)) return null;
+        try {
+            return new BigDecimal(value.trim()).intValueExact();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("年份必须是整数");
+        }
+    }
+
+    private String normalizeExamScope(String value) {
+        if (!hasText(value)) return null;
+        String normalized = value.trim();
+        return switch (normalized) {
+            case "国考" -> "NATIONAL";
+            case "省考" -> "PROVINCIAL";
+            default -> upper(normalized);
+        };
+    }
+
+    private String scopeLabel(String scope) {
+        if ("NATIONAL".equals(scope)) return "国考";
+        if ("PROVINCIAL".equals(scope)) return "省考";
+        return scope;
+    }
+
+    private String categoryLabel(String sourceCategory) {
+        return QuestionSourceCategory.label(sourceCategory);
     }
 
     private String writeOptions(List<String> options) {

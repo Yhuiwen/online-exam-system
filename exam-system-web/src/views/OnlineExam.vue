@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getExam, getExamQuestions } from '../api/exam'
-import { submitExam } from '../api/studentExam'
+import { submitExam, getExamSession } from '../api/studentExam'
 import { getMyViolationSummary, reportViolation } from '../api/examViolation'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -19,6 +19,7 @@ const warnedAtThree = ref(false)
 const reportTimes = new Map()
 
 let timer
+let syncTimer
 let devtoolsTimer
 
 const studentExamId = computed(() => Number(route.query.studentExamId))
@@ -146,6 +147,27 @@ async function promptFullscreen() {
   }
 }
 
+async function syncRemainingTime() {
+  const session = await getExamSession(studentExamId.value)
+  seconds.value = session.remainingSeconds
+  if (session.timedOut && !submitting.value) {
+    await submit(true)
+  }
+}
+
+function startCountdown() {
+  timer = window.setInterval(() => {
+    seconds.value = Math.max(0, seconds.value - 1)
+    if (seconds.value <= 0) {
+      window.clearInterval(timer)
+      submit(true)
+    }
+  }, 1000)
+  syncTimer = window.setInterval(() => {
+    syncRemainingTime().catch(() => {})
+  }, 30000)
+}
+
 async function submit(auto = false) {
   if (submitting.value) return
   if (!auto) {
@@ -183,25 +205,18 @@ onMounted(async () => {
     violationCount.value = 0
   }
 
-  const startedAt = route.query.startedAt ? new Date(route.query.startedAt).getTime() : Date.now()
-  const durationEnd = startedAt + (exam.value.durationMinutes || 60) * 60 * 1000
-  const examEnd = exam.value.endTime ? new Date(exam.value.endTime).getTime() : durationEnd
-  seconds.value = Math.max(0, Math.floor((Math.min(durationEnd, examEnd) - Date.now()) / 1000))
-  if (seconds.value === 0) return submit(true)
+  const session = await getExamSession(studentExamId.value)
+  seconds.value = session.remainingSeconds
+  if (session.timedOut || seconds.value === 0) return submit(true)
 
   startMonitoring()
   promptFullscreen()
-  timer = window.setInterval(() => {
-    seconds.value--
-    if (seconds.value <= 0) {
-      window.clearInterval(timer)
-      submit(true)
-    }
-  }, 1000)
+  startCountdown()
 })
 
 onBeforeUnmount(() => {
   window.clearInterval(timer)
+  window.clearInterval(syncTimer)
   stopMonitoring()
 })
 </script>

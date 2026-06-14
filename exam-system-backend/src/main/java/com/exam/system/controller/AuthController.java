@@ -4,16 +4,20 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.exam.system.common.Result;
 import com.exam.system.dto.LoginRequest;
 import com.exam.system.dto.RegisterRequest;
+import com.exam.system.entity.OperationLog;
 import com.exam.system.entity.SysUser;
 import com.exam.system.exception.BusinessException;
 import com.exam.system.mapper.SysUserMapper;
 import com.exam.system.security.JwtUtil;
 import com.exam.system.security.SecurityUtils;
+import com.exam.system.service.OperationLogService;
 import com.exam.system.vo.LoginVO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -22,6 +26,7 @@ public class AuthController {
     private final SysUserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final OperationLogService operationLogService;
 
     @PostMapping("/register")
     public Result<Void> register(@Valid @RequestBody RegisterRequest request) {
@@ -47,7 +52,23 @@ public class AuthController {
         }
         if (user.getStatus() != 1) throw new BusinessException(403, "账号已被禁用");
         String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
+        recordLogin(user, true, "登录成功");
         return Result.success(new LoginVO(token, user));
+    }
+
+    private void recordLogin(SysUser user, boolean success, String detail) {
+        OperationLog log = new OperationLog();
+        log.setUserId(user == null ? null : user.getId());
+        log.setUsername(user == null ? null : user.getUsername());
+        log.setRealName(user == null ? null : user.getRealName());
+        log.setModule("认证");
+        log.setAction("登录");
+        log.setMethod("POST");
+        log.setPath("/api/auth/login");
+        log.setDetail(detail);
+        log.setSuccess(success);
+        log.setCreateTime(LocalDateTime.now());
+        operationLogService.record(log);
     }
 
     @GetMapping("/me")

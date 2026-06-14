@@ -1,6 +1,7 @@
 package com.exam.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.exam.system.constant.QuestionSourceCategory;
 import com.exam.system.dto.ManualPaperQuestionDTO;
 import com.exam.system.dto.ManualPaperSaveRequest;
 import com.exam.system.dto.ManualPaperUpdateRequest;
@@ -14,6 +15,7 @@ import com.exam.system.mapper.ExamMapper;
 import com.exam.system.mapper.ExamQuestionMapper;
 import com.exam.system.mapper.QuestionMapper;
 import com.exam.system.service.PaperService;
+import com.exam.system.util.QuestionSourceValidator;
 import com.exam.system.vo.ManualQuestionVO;
 import com.exam.system.vo.PaperPreviewQuestionVO;
 import com.exam.system.vo.PaperPreviewVO;
@@ -42,13 +44,19 @@ public class PaperServiceImpl implements PaperService {
 
     @Override
     public List<ManualQuestionVO> selectableQuestions(Long examId, String questionType, String difficulty,
-                                                       String keyword, String knowledgeTag) {
+                                                       String keyword, String knowledgeTag, String sourceCategory) {
         Exam exam = requireExam(examId);
         LambdaQueryWrapper<Question> query = new LambdaQueryWrapper<Question>()
                 .eq(Question::getCourseId, exam.getCourseId())
                 .eq(hasText(questionType), Question::getQuestionType, trim(questionType))
                 .eq(hasText(difficulty), Question::getDifficulty, trim(difficulty))
                 .like(hasText(knowledgeTag), Question::getKnowledgeTag, trim(knowledgeTag))
+                .eq(sourceCategory != null && !sourceCategory.isBlank()
+                                && !QuestionSourceCategory.PRACTICE.equals(QuestionSourceCategory.normalize(sourceCategory)),
+                        Question::getSourceCategory, QuestionSourceCategory.storedValue(sourceCategory))
+                .isNull(sourceCategory != null && !sourceCategory.isBlank()
+                                && QuestionSourceCategory.PRACTICE.equals(QuestionSourceCategory.normalize(sourceCategory)),
+                        Question::getSourceCategory)
                 .and(hasText(keyword), wrapper -> wrapper.like(Question::getContent, trim(keyword))
                         .or().like(Question::getKnowledgeTag, trim(keyword)))
                 .orderByDesc(Question::getCreateTime)
@@ -65,7 +73,8 @@ public class PaperServiceImpl implements PaperService {
                     question.getOptionsJson(), question.getAnswer(), question.getAnalysis(),
                     question.getDifficulty(), question.getScore(), question.getKnowledgeTag(),
                     relation != null, relation == null ? null : relation.getScore(),
-                    relation == null ? null : relation.getSortNo()
+                    relation == null ? null : relation.getSortNo(),
+                    question.getSourceCategory(), QuestionSourceValidator.buildSummary(question)
             );
         }).toList();
     }

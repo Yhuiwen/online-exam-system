@@ -38,10 +38,14 @@ public class QuestionExcelController {
                        @RequestParam(required = false) String questionType,
                        @RequestParam(required = false) String difficulty,
                        @RequestParam(required = false) String keyword,
+                       @RequestParam(required = false) String sourceCategory,
+                       @RequestParam(required = false) String examScope,
+                       @RequestParam(required = false) Integer examYear,
+                       @RequestParam(required = false) String province,
                        HttpServletResponse response) throws IOException {
         prepareDownload(response, "question-bank.xlsx");
         questionExcelService.exportQuestions(courseId, questionType, difficulty, keyword,
-                response.getOutputStream());
+                sourceCategory, examScope, examYear, province, response.getOutputStream());
     }
 
     private void prepareDownload(HttpServletResponse response, String filename) {

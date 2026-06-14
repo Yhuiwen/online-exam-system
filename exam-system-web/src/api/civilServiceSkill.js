@@ -1,7 +1,13 @@
 import request from '../utils/request'
 
 export const getCivilModules = () => request.get('/civil-service/modules')
+export const getCivilArchiveFilters = () => request.get('/civil-service/archive/filters')
+export const getCivilArchiveCatalog = () => request.get('/civil-service/archive/catalog')
 export const getCivilPracticeQuestions = params => request.get('/civil-service/practice/questions', { params })
+export const startCivilDrill = data => request.post('/civil-service/practice/drill/start', data)
+export const getCivilRandomQuestion = params => request.get('/civil-service/practice/random', { params })
+export const submitCivilDrillAnswer = data => request.post('/civil-service/practice/drill/answer', data)
+export const getCivilTestPaper = params => request.get('/civil-service/test/paper', { params })
 export const submitCivilPractice = data => request.post('/civil-service/practice/submit', data)
 export const getCivilWrongQuestions = params => request.get('/civil-service/wrong-questions', { params })
 export const markCivilWrongMastered = id => request.put(`/civil-service/wrong-questions/${id}/mastered`)

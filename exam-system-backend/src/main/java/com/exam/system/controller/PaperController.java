@@ -34,9 +34,10 @@ public class PaperController {
             @RequestParam(required = false) String questionType,
             @RequestParam(required = false) String difficulty,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String knowledgeTag) {
+            @RequestParam(required = false) String knowledgeTag,
+            @RequestParam(required = false) String sourceCategory) {
         return Result.success(paperService.selectableQuestions(
-                examId, questionType, difficulty, keyword, knowledgeTag));
+                examId, questionType, difficulty, keyword, knowledgeTag, sourceCategory));
     }
 
     @PostMapping("/{examId}/manual/save")

@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getExams } from '../api/exam'
+import { getMonitorableExams } from '../api/exam'
 import {
   getExamViolationSummary,
   getStudentExamViolations
@@ -102,7 +102,7 @@ async function openDetails(row) {
 
 onMounted(async () => {
   try {
-    exams.value = await getExams()
+    exams.value = await getMonitorableExams()
     examId.value = exams.value[0]?.id || null
     await loadSummary()
   } catch {

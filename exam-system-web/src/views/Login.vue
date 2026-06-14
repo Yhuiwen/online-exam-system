@@ -9,7 +9,7 @@ const router = useRouter()
 const auth = useAuthStore()
 const loading = ref(false)
 const showRegister = ref(false)
-const form = reactive({ username: 'teacher', password: '123456' })
+const form = reactive({ username: '', password: '' })
 const registerForm = reactive({ username: '', password: '', realName: '', email: '', phone: '' })
 async function submit() {
   loading.value = true

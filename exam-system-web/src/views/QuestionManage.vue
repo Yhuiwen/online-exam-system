@@ -12,7 +12,15 @@ import {
 import { getCourses } from '../api/course'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Download, Upload } from '@element-plus/icons-vue'
-import { formatDifficulty, formatQuestionType } from '../utils/enumMap'
+import {
+  examScopeOptions,
+  formatDifficulty,
+  formatQuestionType,
+  formatSourceCategory,
+  formatSourceSummary,
+  provinceOptions,
+  sourceCategoryOptions
+} from '../utils/enumMap'
 
 const rows = ref([])
 const courses = ref([])
@@ -29,6 +37,10 @@ const query = reactive({
   courseId: null,
   questionType: '',
   difficulty: '',
+  sourceCategory: '',
+  examYear: null,
+  examScope: '',
+  province: '',
   keyword: ''
 })
 const form = reactive({
@@ -40,9 +52,23 @@ const form = reactive({
   analysis: '',
   difficulty: 'EASY',
   score: 5,
-  knowledgeTag: ''
+  knowledgeTag: '',
+  sourceCategory: 'PRACTICE',
+  examYear: null,
+  examScope: '',
+  province: '',
+  paperType: '',
+  sourceRef: ''
 })
 const choice = computed(() => ['SINGLE_CHOICE', 'MULTIPLE_CHOICE'].includes(form.questionType))
+const isRealExam = computed(() => form.sourceCategory === 'REAL_EXAM')
+const isMockExam = computed(() => form.sourceCategory === 'MOCK_EXAM')
+const isSelfAuthored = computed(() => form.sourceCategory === 'SELF_AUTHORED')
+const showArchiveFields = computed(() => isRealExam.value || isMockExam.value)
+const yearOptions = computed(() => {
+  const current = new Date().getFullYear()
+  return Array.from({ length: 12 }, (_, index) => current - index)
+})
 const types = [
   ['SINGLE_CHOICE', '单选'],
   ['MULTIPLE_CHOICE', '多选'],
@@ -51,8 +77,34 @@ const types = [
   ['SHORT_ANSWER', '简答']
 ]
 
+function defaultForm() {
+  return {
+    courseId: courses.value[0]?.id,
+    questionType: 'SINGLE_CHOICE',
+    content: '',
+    options: ['', '', '', ''],
+    answer: '',
+    analysis: '',
+    difficulty: 'EASY',
+    score: 5,
+    knowledgeTag: '',
+    sourceCategory: 'PRACTICE',
+    examYear: null,
+    examScope: '',
+    province: '',
+    paperType: '',
+    sourceRef: ''
+  }
+}
+
 async function load() {
-  const data = await getQuestions(query)
+  const data = await getQuestions({
+    ...query,
+    examYear: query.examYear || undefined,
+    sourceCategory: query.sourceCategory || undefined,
+    examScope: query.examScope || undefined,
+    province: query.province || undefined
+  })
   rows.value = data.records
   total.value = data.total
 }
@@ -69,24 +121,32 @@ function parseOptions(json) {
 function open(row) {
   editing.value = row?.id || null
   Object.assign(form, row
-    ? { ...row, options: parseOptions(row.optionsJson) }
-    : {
-        courseId: courses.value[0]?.id,
-        questionType: 'SINGLE_CHOICE',
-        content: '',
-        options: ['', '', '', ''],
-        answer: '',
-        analysis: '',
-        difficulty: 'EASY',
-        score: 5,
-        knowledgeTag: ''
-      })
+    ? {
+        ...row,
+        sourceCategory: row.sourceCategory || 'PRACTICE',
+        options: parseOptions(row.optionsJson)
+      }
+    : defaultForm())
   visible.value = true
+}
+
+function resetSourceFields() {
+  form.examYear = null
+  form.examScope = ''
+  form.province = ''
+  form.paperType = ''
+  form.sourceRef = ''
 }
 
 async function save() {
   const data = {
     ...form,
+    sourceCategory: form.sourceCategory === 'PRACTICE' ? null : form.sourceCategory,
+    examYear: ['REAL_EXAM', 'MOCK_EXAM'].includes(form.sourceCategory) ? form.examYear : null,
+    examScope: ['REAL_EXAM', 'MOCK_EXAM'].includes(form.sourceCategory) ? form.examScope || null : null,
+    province: ['REAL_EXAM', 'MOCK_EXAM'].includes(form.sourceCategory) ? form.province || null : null,
+    paperType: ['REAL_EXAM', 'MOCK_EXAM'].includes(form.sourceCategory) ? form.paperType || null : null,
+    sourceRef: form.sourceCategory === 'PRACTICE' ? null : form.sourceRef || null,
     optionsJson: choice.value ? JSON.stringify(form.options) : null
   }
   delete data.options
@@ -123,7 +183,11 @@ async function exportBank() {
     courseId: query.courseId || undefined,
     questionType: query.questionType || undefined,
     difficulty: query.difficulty || undefined,
-    keyword: query.keyword || undefined
+    keyword: query.keyword || undefined,
+    sourceCategory: query.sourceCategory || undefined,
+    examYear: query.examYear || undefined,
+    examScope: query.examScope || undefined,
+    province: query.province || undefined
   }
   saveBlob(await exportQuestions(params), 'question-bank.xlsx')
 }
@@ -180,6 +244,9 @@ onMounted(async () => {
       <el-select v-model="query.courseId" clearable placeholder="课程" style="width: 180px">
         <el-option v-for="course in courses" :key="course.id" :label="course.courseName" :value="course.id" />
       </el-select>
+      <el-select v-model="query.sourceCategory" clearable placeholder="题目分类" style="width: 130px">
+        <el-option v-for="item in sourceCategoryOptions" :key="item[0]" :label="item[1]" :value="item[0]" />
+      </el-select>
       <el-select v-model="query.questionType" clearable placeholder="题型" style="width: 150px">
         <el-option v-for="type in types" :key="type[0]" :label="type[1]" :value="type[0]" />
       </el-select>
@@ -188,21 +255,40 @@ onMounted(async () => {
         <el-option label="中等" value="MEDIUM" />
         <el-option label="困难" value="HARD" />
       </el-select>
+      <el-select v-model="query.examYear" clearable placeholder="年份" style="width: 110px">
+        <el-option v-for="year in yearOptions" :key="year" :label="`${year}年`" :value="year" />
+      </el-select>
+      <el-select v-model="query.examScope" clearable placeholder="考试类型" style="width: 120px">
+        <el-option v-for="item in examScopeOptions" :key="item[0]" :label="item[1]" :value="item[0]" />
+      </el-select>
+      <el-select v-model="query.province" clearable filterable placeholder="省份" style="width: 130px">
+        <el-option v-for="province in provinceOptions" :key="province" :label="province" :value="province" />
+      </el-select>
       <el-input v-model="query.keyword" placeholder="题目内容或知识点" clearable style="width: 210px" />
       <el-button type="primary" @click="query.page = 1; load()">筛选</el-button>
     </div>
 
     <div class="panel">
       <el-table :data="rows">
-        <el-table-column prop="content" label="题目" min-width="300" show-overflow-tooltip />
-        <el-table-column label="题型" width="150">
+        <el-table-column prop="content" label="题目" min-width="260" show-overflow-tooltip />
+        <el-table-column label="分类" width="90">
+          <template #default="{ row }">
+            <el-tag :type="row.sourceCategory === 'REAL_EXAM' ? 'success' : row.sourceCategory ? 'warning' : 'info'" effect="plain">
+              {{ formatSourceCategory(row.sourceCategory) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="来源" min-width="220" show-overflow-tooltip>
+          <template #default="{ row }">{{ formatSourceSummary(row) }}</template>
+        </el-table-column>
+        <el-table-column label="题型" width="110">
           <template #default="{ row }">{{ formatQuestionType(row.questionType) }}</template>
         </el-table-column>
-        <el-table-column label="难度" width="100">
+        <el-table-column label="难度" width="90">
           <template #default="{ row }">{{ formatDifficulty(row.difficulty) }}</template>
         </el-table-column>
-        <el-table-column prop="knowledgeTag" label="知识点" width="140" />
-        <el-table-column prop="score" label="分值" width="80" />
+        <el-table-column prop="knowledgeTag" label="知识点" width="120" show-overflow-tooltip />
+        <el-table-column prop="score" label="分值" width="70" />
         <el-table-column label="操作" width="140">
           <template #default="{ row }">
             <el-button link @click="open(row)">编辑</el-button>
@@ -230,6 +316,9 @@ onMounted(async () => {
         <el-icon class="el-icon--upload"><Upload /></el-icon>
         <div class="el-upload__text">将 .xlsx 文件拖到此处，或点击选择</div>
       </el-upload>
+      <p class="import-tip">
+        模板支持题目分类：练习题、真题、模拟题、自命题。真题需标注年份、国考/省考、省份与来源；模拟题和自命题需填写来源说明。
+      </p>
       <el-alert
         v-if="importResult"
         :title="`成功 ${importResult.successCount} 条，失败 ${importResult.failCount} 条`"
@@ -248,13 +337,49 @@ onMounted(async () => {
       </template>
     </el-dialog>
 
-    <el-dialog v-model="visible" :title="editing ? '编辑题目' : '新增题目'" width="680">
-      <el-form label-width="90">
+    <el-dialog v-model="visible" :title="editing ? '编辑题目' : '新增题目'" width="760">
+      <el-form label-width="96">
         <el-form-item label="课程">
           <el-select v-model="form.courseId">
             <el-option v-for="course in courses" :key="course.id" :label="course.courseName" :value="course.id" />
           </el-select>
         </el-form-item>
+        <el-form-item label="题目分类">
+          <el-radio-group v-model="form.sourceCategory" @change="resetSourceFields">
+            <el-radio-button v-for="item in sourceCategoryOptions" :key="item[0]" :value="item[0]">
+              {{ item[1] }}
+            </el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <template v-if="form.sourceCategory !== 'PRACTICE'">
+          <el-form-item v-if="isRealExam || isMockExam" label="年份">
+            <el-select v-model="form.examYear" clearable placeholder="选择年份" style="width: 180px">
+              <el-option v-for="year in yearOptions" :key="year" :label="`${year}年`" :value="year" />
+            </el-select>
+            <span v-if="isRealExam" class="field-tip">真题必填</span>
+          </el-form-item>
+          <el-form-item v-if="isRealExam || isMockExam" label="考试类型">
+            <el-select v-model="form.examScope" clearable placeholder="国考/省考" style="width: 180px">
+              <el-option v-for="item in examScopeOptions" :key="item[0]" :label="item[1]" :value="item[0]" />
+            </el-select>
+            <span v-if="isRealExam" class="field-tip">真题必填</span>
+          </el-form-item>
+          <el-form-item v-if="isRealExam || (isMockExam && form.examScope === 'PROVINCIAL')" label="省份">
+            <el-select v-model="form.province" clearable filterable allow-create placeholder="选择或输入省份" style="width: 220px">
+              <el-option v-for="province in provinceOptions" :key="province" :label="province" :value="province" />
+            </el-select>
+            <span v-if="isRealExam && form.examScope === 'PROVINCIAL'" class="field-tip">省考必填</span>
+          </el-form-item>
+          <el-form-item v-if="showArchiveFields" label="卷别">
+            <el-input v-model="form.paperType" placeholder="如 地市级、副省级、县级、通用" />
+          </el-form-item>
+          <el-form-item label="来源说明">
+            <el-input
+              v-model="form.sourceRef"
+              :placeholder="isSelfAuthored ? '如 本校2024期末自编、教研室命题' : isMockExam ? '如 华图2024冲刺卷、粉笔模考' : '如 公开资料整理、机构回忆版'"
+            />
+          </el-form-item>
+        </template>
         <el-form-item label="题型">
           <el-select v-model="form.questionType">
             <el-option v-for="type in types" :key="type[0]" :label="type[1]" :value="type[0]" />
@@ -292,6 +417,9 @@ onMounted(async () => {
 
 <style scoped>
 .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
 .option-list { display: grid; gap: 8px; width: 100%; }
 .import-summary { margin: 16px 0; }
+.import-tip { margin: 12px 0 0; color: #64748b; font-size: 13px; line-height: 1.6; }
+.field-tip { margin-left: 10px; color: #94a3b8; font-size: 12px; }
 </style>

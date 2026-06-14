@@ -10,6 +10,15 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Shanghai
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
 
 mybatis-plus:
   configuration:
@@ -19,5 +28,18 @@ mybatis-plus:
       id-type: auto
 
 jwt:
-  secret: "exam-system-course-project-jwt-secret-key-2026-change-me"
-  expiration: 86400000
+  secret: ${JWT_SECRET:exam-system-course-project-jwt-secret-key-2026-change-me}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+auth:
+  rate-limit:
+    max-attempts: ${AUTH_RATE_LIMIT_MAX:10}
+    window-seconds: ${AUTH_RATE_LIMIT_WINDOW:60}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+app:
+  redis:
+    enabled: ${REDIS_ENABLED:false}

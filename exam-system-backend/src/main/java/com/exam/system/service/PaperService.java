@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface PaperService {
     List<ManualQuestionVO> selectableQuestions(Long examId, String questionType, String difficulty,
-                                               String keyword, String knowledgeTag);
+                                               String keyword, String knowledgeTag, String sourceCategory);
 
     PaperPreviewVO saveManualPaper(Long examId, ManualPaperSaveRequest request);
 

@@ -2,15 +2,20 @@ package com.exam.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.exam.system.dto.ExamViolationReportRequest;
+import com.exam.system.entity.Exam;
+import com.exam.system.entity.ExamProctor;
 import com.exam.system.entity.ExamViolation;
 import com.exam.system.entity.StudentExam;
 import com.exam.system.entity.SysUser;
 import com.exam.system.exception.BusinessException;
 import com.exam.system.mapper.ExamViolationMapper;
+import com.exam.system.mapper.ExamMapper;
+import com.exam.system.mapper.ExamProctorMapper;
 import com.exam.system.mapper.StudentExamMapper;
 import com.exam.system.mapper.SysUserMapper;
 import com.exam.system.security.SecurityUtils;
 import com.exam.system.service.ExamViolationService;
+import com.exam.system.support.RuntimeSupport;
 import com.exam.system.vo.ExamViolationSummaryVO;
 import com.exam.system.vo.ExamViolationVO;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,6 +42,9 @@ public class ExamViolationServiceImpl implements ExamViolationService {
     private final ExamViolationMapper violationMapper;
     private final StudentExamMapper studentExamMapper;
     private final SysUserMapper userMapper;
+    private final RuntimeSupport runtimeSupport;
+    private final ExamMapper examMapper;
+    private final ExamProctorMapper examProctorMapper;
 
     @Override
     @Transactional
@@ -55,13 +64,14 @@ public class ExamViolationServiceImpl implements ExamViolationService {
         if (!VIOLATION_TYPES.contains(violationType)) {
             throw new BusinessException("异常行为类型不合法");
         }
+        String dedupKey = "violation:" + studentExam.getId() + ":" + violationType;
+        if (!runtimeSupport.markIfAbsent(dedupKey, Duration.ofSeconds(5))) {
+            ExamViolation recent = findRecentViolation(studentExam.getId(), violationType);
+            if (recent != null) return toVO(recent);
+            throw new BusinessException("异常行为上报过于频繁");
+        }
         LocalDateTime now = LocalDateTime.now();
-        ExamViolation recent = violationMapper.selectOne(new LambdaQueryWrapper<ExamViolation>()
-                .eq(ExamViolation::getStudentExamId, studentExam.getId())
-                .eq(ExamViolation::getViolationType, violationType)
-                .ge(ExamViolation::getCreateTime, now.minusSeconds(5))
-                .orderByDesc(ExamViolation::getCreateTime)
-                .last("LIMIT 1"));
+        ExamViolation recent = findRecentViolation(studentExam.getId(), violationType, now);
         if (recent != null) return toVO(recent);
 
         ExamViolation violation = new ExamViolation();
@@ -77,6 +87,7 @@ public class ExamViolationServiceImpl implements ExamViolationService {
 
     @Override
     public List<ExamViolationSummaryVO> examSummary(Long examId) {
+        ensureMonitorAccess(examId);
         List<StudentExam> records = studentExamMapper.selectList(new LambdaQueryWrapper<StudentExam>()
                 .eq(StudentExam::getExamId, examId)
                 .orderByAsc(StudentExam::getStudentId));
@@ -89,7 +100,8 @@ public class ExamViolationServiceImpl implements ExamViolationService {
 
     @Override
     public List<ExamViolationVO> studentExamDetails(Long studentExamId) {
-        ensureStudentExamExists(studentExamId);
+        StudentExam record = ensureStudentExamExists(studentExamId);
+        ensureMonitorAccess(record.getExamId());
         return violationMapper.selectList(new LambdaQueryWrapper<ExamViolation>()
                         .eq(ExamViolation::getStudentExamId, studentExamId)
                         .orderByDesc(ExamViolation::getCreateTime))
@@ -103,6 +115,19 @@ public class ExamViolationServiceImpl implements ExamViolationService {
             throw new AccessDeniedException("只能查询自己的考试异常记录");
         }
         return summary(record);
+    }
+
+    private ExamViolation findRecentViolation(Long studentExamId, String violationType) {
+        return findRecentViolation(studentExamId, violationType, LocalDateTime.now());
+    }
+
+    private ExamViolation findRecentViolation(Long studentExamId, String violationType, LocalDateTime now) {
+        return violationMapper.selectOne(new LambdaQueryWrapper<ExamViolation>()
+                .eq(ExamViolation::getStudentExamId, studentExamId)
+                .eq(ExamViolation::getViolationType, violationType)
+                .ge(ExamViolation::getCreateTime, now.minusSeconds(5))
+                .orderByDesc(ExamViolation::getCreateTime)
+                .last("LIMIT 1"));
     }
 
     private ExamViolationSummaryVO summary(StudentExam record) {
@@ -123,6 +148,20 @@ public class ExamViolationServiceImpl implements ExamViolationService {
         StudentExam record = studentExamMapper.selectById(studentExamId);
         if (record == null) throw new BusinessException("学生考试记录不存在");
         return record;
+    }
+
+    private void ensureMonitorAccess(Long examId) {
+        String role = SecurityUtils.current().getUser().getRole();
+        if ("ADMIN".equals(role)) return;
+        Exam exam = examMapper.selectById(examId);
+        if (exam == null) throw new BusinessException("考试不存在");
+        if (SecurityUtils.userId().equals(exam.getTeacherId())) return;
+        long proctorCount = examProctorMapper.selectCount(new LambdaQueryWrapper<ExamProctor>()
+                .eq(ExamProctor::getExamId, examId)
+                .eq(ExamProctor::getTeacherId, SecurityUtils.userId()));
+        if (proctorCount == 0) {
+            throw new BusinessException(403, "无权查看该考试监控数据");
+        }
     }
 
     private String riskLevel(long count) {

@@ -9,6 +9,7 @@ const routes = [
     children: [
       { path: 'dashboard', component: () => import('../views/Dashboard.vue') },
       { path: 'users', component: () => import('../views/UserManage.vue'), meta: { roles: ['ADMIN'] } },
+      { path: 'operation-logs', component: () => import('../views/OperationLog.vue'), meta: { roles: ['ADMIN'] } },
       { path: 'courses', component: () => import('../views/CourseManage.vue'), meta: { roles: ['ADMIN', 'TEACHER'] } },
       { path: 'questions', component: () => import('../views/QuestionManage.vue'), meta: { roles: ['TEACHER'] } },
       { path: 'exams', component: () => import('../views/ExamManage.vue'), meta: { roles: ['ADMIN', 'TEACHER'] } },

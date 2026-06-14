@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getExam } from '../api/exam'
 import { getManualQuestions, getPaperPreview, saveManualPaper } from '../api/paper'
-import { formatDifficulty, formatQuestionType } from '../utils/enumMap'
+import { formatDifficulty, formatQuestionType, formatSourceCategory, sourceCategoryOptions } from '../utils/enumMap'
 
 const route = useRoute()
 const router = useRouter()
@@ -20,6 +20,7 @@ const filters = reactive({
   questionType: '',
   difficulty: '',
   knowledgeTag: '',
+  sourceCategory: '',
   keyword: ''
 })
 
@@ -66,6 +67,7 @@ async function loadQuestions() {
       questionType: filters.questionType || undefined,
       difficulty: filters.difficulty || undefined,
       knowledgeTag: filters.knowledgeTag || undefined,
+      sourceCategory: filters.sourceCategory || undefined,
       keyword: filters.keyword || undefined
     })
   } finally {
@@ -88,6 +90,7 @@ function resetFilters() {
     questionType: '',
     difficulty: '',
     knowledgeTag: '',
+    sourceCategory: '',
     keyword: ''
   })
   loadQuestions()
@@ -214,6 +217,14 @@ onMounted(loadPage)
           <el-option label="中等" value="MEDIUM" />
           <el-option label="困难" value="HARD" />
         </el-select>
+        <el-select v-model="filters.sourceCategory" clearable placeholder="题目分类" style="width: 130px">
+          <el-option
+            v-for="item in sourceCategoryOptions"
+            :key="item[0]"
+            :label="item[1]"
+            :value="item[0]"
+          />
+        </el-select>
         <el-input
           v-model="filters.knowledgeTag"
           clearable
@@ -232,7 +243,13 @@ onMounted(loadPage)
       </div>
 
       <el-table v-loading="loading" :data="questionRows" empty-text="没有符合条件的题目">
-        <el-table-column prop="content" label="题目内容" min-width="300" show-overflow-tooltip />
+        <el-table-column prop="content" label="题目内容" min-width="260" show-overflow-tooltip />
+        <el-table-column label="分类" width="90">
+          <template #default="{ row }">{{ formatSourceCategory(row.sourceCategory) }}</template>
+        </el-table-column>
+        <el-table-column prop="sourceSummary" label="来源" min-width="180" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.sourceSummary || '-' }}</template>
+        </el-table-column>
         <el-table-column label="题型" width="105">
           <template #default="{ row }">{{ formatQuestionType(row.questionType) }}</template>
         </el-table-column>

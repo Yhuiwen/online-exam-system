@@ -6,7 +6,7 @@ import { getStudentExams, startExam } from '../api/studentExam'
 const rows=ref([]),records=ref(new Map()),router=useRouter()
 async function start(row){
   const record=await startExam(row.id)
-  router.push({path:`/online-exam/${row.id}`,query:{studentExamId:record.id,startedAt:record.startTime}})
+  router.push({ path: `/online-exam/${row.id}`, query: { studentExamId: record.id } })
 }
 function recordOf(examId){return records.value.get(examId)}
 onMounted(async()=>{

@@ -11,5 +11,6 @@ public interface QuestionExcelService {
     QuestionImportResultVO importQuestions(MultipartFile file);
 
     void exportQuestions(Long courseId, String questionType, String difficulty, String keyword,
+                         String sourceCategory, String examScope, Integer examYear, String province,
                          OutputStream outputStream);
 }

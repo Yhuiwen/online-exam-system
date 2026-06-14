@@ -2,6 +2,7 @@ package com.exam.system.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.exam.system.common.Result;
+import com.exam.system.dto.AssignExamProctorsRequest;
 import com.exam.system.dto.AutoPaperRequest;
 import com.exam.system.entity.Exam;
 import com.exam.system.entity.ExamQuestion;
@@ -12,6 +13,7 @@ import com.exam.system.mapper.ExamQuestionMapper;
 import com.exam.system.mapper.QuestionMapper;
 import com.exam.system.security.SecurityUtils;
 import com.exam.system.service.ExamService;
+import com.exam.system.vo.ExamVO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,10 +32,14 @@ public class ExamController {
     private final ExamService examService;
 
     @GetMapping
-    public Result<List<Exam>> list() {
-        LambdaQueryWrapper<Exam> q = new LambdaQueryWrapper<Exam>().orderByDesc(Exam::getCreateTime);
-        if ("STUDENT".equals(SecurityUtils.current().getUser().getRole())) q.eq(Exam::getStatus, "PUBLISHED");
-        return Result.success(mapper.selectList(q));
+    public Result<List<ExamVO>> list() {
+        return Result.success(examService.listExams());
+    }
+
+    @GetMapping("/monitorable")
+    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
+    public Result<List<ExamVO>> monitorable() {
+        return Result.success(examService.listMonitorableExams());
     }
 
     @PostMapping
@@ -51,6 +57,20 @@ public class ExamController {
     public Result<Void> update(@PathVariable Long id, @RequestBody Exam exam) {
         exam.setId(id);
         mapper.updateById(exam);
+        return Result.success();
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
+    public Result<Void> delete(@PathVariable Long id) {
+        examService.deleteExam(id);
+        return Result.success();
+    }
+
+    @PutMapping("/{id}/proctors")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<Void> assignProctors(@PathVariable Long id, @Valid @RequestBody AssignExamProctorsRequest request) {
+        examService.assignProctors(id, request);
         return Result.success();
     }
 
@@ -81,15 +101,17 @@ public class ExamController {
     }
 
     @GetMapping("/{id}")
-    public Result<Exam> detail(@PathVariable Long id) {
-        Exam exam = mapper.selectById(id);
-        checkStudentAccess(exam);
-        return Result.success(exam);
+    public Result<ExamVO> detail(@PathVariable Long id) {
+        return Result.success(examService.getExamVO(id));
     }
 
     @GetMapping("/{id}/questions")
     public Result<List<Question>> questions(@PathVariable Long id) {
-        checkStudentAccess(mapper.selectById(id));
+        Exam exam = mapper.selectById(id);
+        if (exam == null) throw new BusinessException("考试不存在");
+        if ("STUDENT".equals(SecurityUtils.current().getUser().getRole()) && !"PUBLISHED".equals(exam.getStatus())) {
+            throw new BusinessException(403, "该考试尚未发布");
+        }
         boolean include = !"STUDENT".equals(SecurityUtils.current().getUser().getRole());
         return Result.success(examService.questions(id, include));
     }
@@ -109,12 +131,5 @@ public class ExamController {
         BigDecimal total = examQuestionMapper.selectList(new LambdaQueryWrapper<ExamQuestion>().eq(ExamQuestion::getExamId, id))
                 .stream().map(ExamQuestion::getScore).reduce(BigDecimal.ZERO, BigDecimal::add);
         Exam exam = mapper.selectById(id); exam.setTotalScore(total); mapper.updateById(exam);
-    }
-
-    private void checkStudentAccess(Exam exam) {
-        if (exam == null) throw new BusinessException("考试不存在");
-        if ("STUDENT".equals(SecurityUtils.current().getUser().getRole()) && !"PUBLISHED".equals(exam.getStatus())) {
-            throw new BusinessException(403, "该考试尚未发布");
-        }
     }
 }

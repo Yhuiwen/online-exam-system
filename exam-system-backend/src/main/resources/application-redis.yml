@@ -1,0 +1,7 @@
+app:
+  redis:
+    enabled: true
+
+spring:
+  autoconfigure:
+    exclude: []

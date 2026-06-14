@@ -2,6 +2,9 @@ package com.exam.system.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.exam.system.common.Result;
+import com.exam.system.constant.QuestionSourceCategory;
+import com.exam.system.dto.CivilDrillAnswerRequest;
+import com.exam.system.dto.CivilDrillStartRequest;
 import com.exam.system.dto.CivilPracticeSubmitRequest;
 import com.exam.system.entity.*;
 import com.exam.system.exception.BusinessException;
@@ -43,9 +46,66 @@ public class CivilServiceSkillController {
         return Result.success(MODULES.stream().map(this::moduleMap).toList());
     }
 
+    @GetMapping("/archive/filters")
+    public Result<Map<String, Object>> archiveFilters() {
+        Long courseId = civilCourseId();
+        Map<String, Object> result = new LinkedHashMap<>();
+        if (courseId == null) {
+            result.put("years", List.of());
+            result.put("scopes", List.of());
+            result.put("provinces", List.of());
+            result.put("paperTypes", List.of());
+            return Result.success(result);
+        }
+        List<Question> archived = questionMapper.selectList(new LambdaQueryWrapper<Question>()
+                .eq(Question::getCourseId, courseId)
+                .eq(Question::getSourceCategory, QuestionSourceCategory.REAL_EXAM)
+                .isNotNull(Question::getExamYear)
+                .select(Question::getExamYear, Question::getExamScope, Question::getProvince, Question::getPaperType));
+        result.put("years", archived.stream().map(Question::getExamYear).filter(Objects::nonNull).distinct().sorted(Comparator.reverseOrder()).toList());
+        result.put("scopes", scopeOptions(archived));
+        result.put("provinces", archived.stream().map(Question::getProvince).filter(s -> s != null && !s.isBlank()).distinct().sorted().toList());
+        result.put("paperTypes", archived.stream().map(Question::getPaperType).filter(s -> s != null && !s.isBlank()).distinct().sorted().toList());
+        return Result.success(result);
+    }
+
+    @GetMapping("/archive/catalog")
+    public Result<List<Map<String, Object>>> archiveCatalog() {
+        Long courseId = civilCourseId();
+        if (courseId == null) return Result.success(List.of());
+        List<Question> archived = questionMapper.selectList(new LambdaQueryWrapper<Question>()
+                .eq(Question::getCourseId, courseId)
+                .eq(Question::getSourceCategory, QuestionSourceCategory.REAL_EXAM)
+                .isNotNull(Question::getExamYear)
+                .orderByDesc(Question::getExamYear)
+                .orderByAsc(Question::getExamScope)
+                .orderByAsc(Question::getProvince)
+                .orderByAsc(Question::getPaperType));
+        Map<String, List<Question>> grouped = archived.stream().collect(Collectors.groupingBy(this::archiveKey, LinkedHashMap::new, Collectors.toList()));
+        List<Map<String, Object>> catalog = new ArrayList<>();
+        for (var entry : grouped.entrySet()) {
+            Question sample = entry.getValue().get(0);
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("examYear", sample.getExamYear());
+            item.put("examScope", sample.getExamScope());
+            item.put("examScopeLabel", scopeLabel(sample.getExamScope()));
+            item.put("province", sample.getProvince());
+            item.put("paperType", sample.getPaperType());
+            item.put("questionCount", entry.getValue().size());
+            item.put("sourceRef", sample.getSourceRef());
+            catalog.add(item);
+        }
+        return Result.success(catalog);
+    }
+
     @GetMapping("/practice/questions")
     public Result<List<Map<String, Object>>> questions(@RequestParam(required = false) String moduleCode,
                                                        @RequestParam(required = false) String difficulty,
+                                                       @RequestParam(required = false) Integer examYear,
+                                                       @RequestParam(required = false) String examScope,
+                                                       @RequestParam(required = false) String province,
+                                                       @RequestParam(required = false) String paperType,
+                                                       @RequestParam(required = false) Boolean archiveOnly,
                                                        @RequestParam(defaultValue = "10") Integer count) {
         Long courseId = civilCourseId();
         if (courseId == null) return Result.success(List.of());
@@ -55,11 +115,153 @@ public class CivilServiceSkillController {
                 .ne(Question::getQuestionType, "SHORT_ANSWER")
                 .eq(module != null, Question::getKnowledgeTag, module == null ? null : module.name())
                 .eq(difficulty != null && !difficulty.isBlank(), Question::getDifficulty, difficulty)
+                .eq(examYear != null, Question::getExamYear, examYear)
+                .eq(examScope != null && !examScope.isBlank(), Question::getExamScope, examScope)
+                .eq(province != null && !province.isBlank(), Question::getProvince, province)
+                .eq(paperType != null && !paperType.isBlank(), Question::getPaperType, paperType)
+                .eq(Boolean.TRUE.equals(archiveOnly), Question::getSourceCategory, QuestionSourceCategory.REAL_EXAM)
+                .isNotNull(Boolean.TRUE.equals(archiveOnly), Question::getExamYear)
+                .and(Boolean.FALSE.equals(archiveOnly), q -> q
+                        .isNull(Question::getSourceCategory)
+                        .or()
+                        .ne(Question::getSourceCategory, QuestionSourceCategory.REAL_EXAM))
+                .orderByDesc(Question::getExamYear)
                 .orderByDesc(Question::getCreateTime);
         List<Question> list = questionMapper.selectList(wrapper);
         Collections.shuffle(list);
         int limit = Math.max(1, Math.min(Optional.ofNullable(count).orElse(10), 50));
         return Result.success(list.stream().limit(limit).map(this::questionCard).toList());
+    }
+
+    @PostMapping("/practice/drill/start")
+    public Result<Map<String, Object>> startDrill(@RequestBody(required = false) CivilDrillStartRequest request) {
+        Long userId = SecurityUtils.userId();
+        ModuleDef module = request == null ? null : findModule(request.moduleCode());
+        String moduleCode = module == null ? "MIXED" : module.code();
+        String moduleName = module == null ? "刷题模式" : module.name() + "刷题";
+
+        CivilPracticeSession session = new CivilPracticeSession();
+        session.setStudentId(userId);
+        session.setModuleCode(moduleCode);
+        session.setModuleName(moduleName);
+        session.setQuestionCount(0);
+        session.setCorrectCount(0);
+        session.setAccuracy(BigDecimal.ZERO);
+        session.setDurationSeconds(0);
+        sessionMapper.insert(session);
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("sessionId", session.getId());
+        result.put("moduleCode", moduleCode);
+        result.put("moduleName", moduleName);
+        return Result.success(result);
+    }
+
+    @GetMapping("/practice/random")
+    public Result<Map<String, Object>> randomQuestion(@RequestParam(required = false) String moduleCode,
+                                                      @RequestParam(required = false) String difficulty,
+                                                      @RequestParam(required = false) String excludeIds) {
+        Long courseId = civilCourseId();
+        if (courseId == null) return Result.success(Map.of());
+        ModuleDef module = findModule(moduleCode);
+        Set<Long> excluded = parseIdSet(excludeIds);
+        LambdaQueryWrapper<Question> wrapper = new LambdaQueryWrapper<Question>()
+                .eq(Question::getCourseId, courseId)
+                .ne(Question::getQuestionType, "SHORT_ANSWER")
+                .eq(module != null, Question::getKnowledgeTag, module == null ? null : module.name())
+                .eq(difficulty != null && !difficulty.isBlank(), Question::getDifficulty, difficulty)
+                .notIn(!excluded.isEmpty(), Question::getId, excluded);
+        List<Question> list = questionMapper.selectList(wrapper);
+        if (list.isEmpty()) return Result.success(Map.of());
+        Collections.shuffle(list);
+        return Result.success(questionCard(list.get(0)));
+    }
+
+    @PostMapping("/practice/drill/answer")
+    @Transactional
+    public Result<Map<String, Object>> drillAnswer(@RequestBody CivilDrillAnswerRequest request) {
+        if (request.sessionId() == null || request.questionId() == null) {
+            throw new BusinessException("会话或题目信息不完整");
+        }
+        Long userId = SecurityUtils.userId();
+        CivilPracticeSession session = sessionMapper.selectById(request.sessionId());
+        if (session == null || !userId.equals(session.getStudentId())) {
+            throw new BusinessException("刷题会话不存在");
+        }
+        Question question = questionMapper.selectById(request.questionId());
+        if (question == null) throw new BusinessException("题目不存在");
+
+        String userAnswer = Optional.ofNullable(request.answer()).orElse("");
+        boolean correct = correct(question, userAnswer);
+        String moduleCode = Optional.ofNullable(session.getModuleCode()).orElse("MIXED");
+
+        CivilPracticeAnswer answer = new CivilPracticeAnswer();
+        answer.setSessionId(session.getId());
+        answer.setStudentId(userId);
+        answer.setQuestionId(question.getId());
+        answer.setModuleCode(moduleCode);
+        answer.setUserAnswer(userAnswer);
+        answer.setCorrectAnswer(question.getAnswer());
+        answer.setIsCorrect(correct);
+        answer.setDurationSeconds(Optional.ofNullable(request.durationSeconds()).orElse(0));
+        answer.setCreateTime(LocalDateTime.now());
+        answerMapper.insert(answer);
+
+        if (!correct) upsertWrong(userId, question, moduleCode, userAnswer);
+
+        int total = Optional.ofNullable(session.getQuestionCount()).orElse(0) + 1;
+        int correctCount = Optional.ofNullable(session.getCorrectCount()).orElse(0) + (correct ? 1 : 0);
+        session.setQuestionCount(total);
+        session.setCorrectCount(correctCount);
+        session.setAccuracy(percent(correctCount, total));
+        session.setDurationSeconds(Optional.ofNullable(session.getDurationSeconds()).orElse(0)
+                + Optional.ofNullable(request.durationSeconds()).orElse(0));
+        sessionMapper.updateById(session);
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("correct", correct);
+        result.put("userAnswer", userAnswer);
+        result.put("correctAnswer", question.getAnswer());
+        result.put("analysis", question.getAnalysis());
+        result.put("tip", buildTip(question));
+        result.put("questionCount", total);
+        result.put("correctCount", correctCount);
+        result.put("accuracy", session.getAccuracy());
+        result.put("addedToWrongBook", !correct);
+        return Result.success(result);
+    }
+
+    @GetMapping("/test/paper")
+    public Result<Map<String, Object>> testPaper(@RequestParam Integer examYear,
+                                                 @RequestParam String examScope,
+                                                 @RequestParam String province,
+                                                 @RequestParam String paperType) {
+        Long courseId = civilCourseId();
+        if (courseId == null) return Result.success(Map.of());
+        List<Question> questions = questionMapper.selectList(new LambdaQueryWrapper<Question>()
+                .eq(Question::getCourseId, courseId)
+                .eq(Question::getSourceCategory, QuestionSourceCategory.REAL_EXAM)
+                .eq(Question::getExamYear, examYear)
+                .eq(Question::getExamScope, examScope)
+                .eq(Question::getProvince, province)
+                .eq(Question::getPaperType, paperType)
+                .ne(Question::getQuestionType, "SHORT_ANSWER")
+                .orderByAsc(Question::getId));
+        if (questions.isEmpty()) throw new BusinessException("未找到该套真题试卷");
+
+        int durationMinutes = Math.max(30, Math.min(180, (int) Math.ceil(questions.size() * 1.5)));
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("examYear", examYear);
+        result.put("examScope", examScope);
+        result.put("examScopeLabel", scopeLabel(examScope));
+        result.put("province", province);
+        result.put("paperType", paperType);
+        result.put("paperTitle", examYear + "年" + scopeLabel(examScope) + province + paperType + "真题测试");
+        result.put("questionCount", questions.size());
+        result.put("durationMinutes", durationMinutes);
+        result.put("sourceRef", questions.get(0).getSourceRef());
+        result.put("questions", questions.stream().map(this::questionCard).toList());
+        return Result.success(result);
     }
 
     @PostMapping("/practice/submit")
@@ -322,7 +524,29 @@ public class CivilServiceSkillController {
         item.put("score", q.getScore());
         item.put("knowledgeTag", q.getKnowledgeTag());
         item.put("moduleName", q.getKnowledgeTag());
+        item.put("examYear", q.getExamYear());
+        item.put("examScope", q.getExamScope());
+        item.put("examScopeLabel", scopeLabel(q.getExamScope()));
+        item.put("province", q.getProvince());
+        item.put("paperType", q.getPaperType());
+        item.put("sourceRef", q.getSourceRef());
         return item;
+    }
+
+    private String archiveKey(Question q) {
+        return q.getExamYear() + "|" + q.getExamScope() + "|" + q.getProvince() + "|" + q.getPaperType();
+    }
+
+    private String scopeLabel(String scope) {
+        if ("NATIONAL".equals(scope)) return "国考";
+        if ("PROVINCIAL".equals(scope)) return "省考";
+        return scope == null ? "" : scope;
+    }
+
+    private List<Map<String, String>> scopeOptions(List<Question> archived) {
+        return archived.stream().map(Question::getExamScope).filter(Objects::nonNull).distinct()
+                .map(scope -> Map.of("value", scope, "label", scopeLabel(scope)))
+                .toList();
     }
 
     private boolean correct(Question q, String answer) {
@@ -369,6 +593,32 @@ public class CivilServiceSkillController {
 
     private String emptyToDefault(String value, String fallback) {
         return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private Set<Long> parseIdSet(String value) {
+        if (value == null || value.isBlank()) return Set.of();
+        Set<Long> ids = new HashSet<>();
+        for (String part : value.split(",")) {
+            String trimmed = part.trim();
+            if (trimmed.isBlank()) continue;
+            try {
+                ids.add(Long.valueOf(trimmed));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return ids;
+    }
+
+    private String buildTip(Question question) {
+        String tag = Optional.ofNullable(question.getKnowledgeTag()).orElse("");
+        return switch (tag) {
+            case "言语理解" -> "言语题先抓主旨词和关联词，排除绝对化、偷换概念和过度推断的选项。";
+            case "数量关系" -> "数量题可先判断题型（工程/行程/比例/容斥），能代入或估算法时优先试算，避免硬算。";
+            case "判断推理" -> "判断题先明确题干问法（加强/削弱/前提/结论），定义题严格按关键词逐条比对。";
+            case "资料分析" -> "资料题先读问题再找数据，增长率、比重、平均数要分清基期和现期，注意单位换算。";
+            case "常识判断" -> "常识题可用排除法，优先排除明显违背法律、科学常识和时政表述的选项。";
+            default -> "先审题干关键词，再比对选项差异；不确定时优先排除明显错误项，提高正确率。";
+        };
     }
 
     private record ModuleDef(String code, String name, String description) {}
