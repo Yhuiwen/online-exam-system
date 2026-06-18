@@ -11,6 +11,8 @@ services:
       - "3306:3306"
     volumes:
       - exam-mysql-data:/var/lib/mysql
+      - ./docker/mysql/conf.d:/etc/mysql/conf.d:ro
+      - ./exam-system-backend/src/main/resources/00-charset.sql:/docker-entrypoint-initdb.d/00-charset.sql:ro
       - ./exam-system-backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ./exam-system-backend/src/main/resources/data.sql:/docker-entrypoint-initdb.d/02-data.sql:ro
       - ./exam-system-backend/src/main/resources/civil-service-skill-migration.sql:/docker-entrypoint-initdb.d/03-civil-service-skill-migration.sql:ro
@@ -46,7 +48,7 @@ services:
         condition: service_healthy
     environment:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-123456}
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/exam_system?useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/exam_system?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowMultiQueries=true&allowPublicKeyRetrieval=true
       SPRING_PROFILES_ACTIVE: redis
       REDIS_ENABLED: "true"
       REDIS_HOST: redis

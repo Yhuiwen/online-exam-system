@@ -183,6 +183,23 @@ SOURCE civil-service-skill-migration.sql;
 
 `schema.sql` 会创建 `exam_system` 数据库及项目所需数据表，`data.sql` 会写入演示账号、课程、题目和考试数据。
 
+### 字符集与乱码（Windows / Docker）
+
+MySQL 与 JDBC 需统一使用 `utf8mb4`，否则中文会出现乱码或双重编码。
+
+**新库（推荐）**：使用 Docker Compose 启动 MySQL 时，已挂载 `docker/mysql/conf.d/charset.cnf` 与 `00-charset.sql`，`schema.sql` / `data.sql` 开头也包含 `SET NAMES utf8mb4`。
+
+**已有库出现乱码时**，在 Windows 上请勿通过 PowerShell 管道执行 SQL（会破坏 UTF-8），应使用 `docker cp` 复制脚本后在容器内 `source`：
+
+```powershell
+docker cp exam-system-backend/src/main/resources/charset-seed-reload.sql exam-mysql:/tmp/charset-seed-reload.sql
+docker exec exam-mysql mysql -uroot -p123456 --default-character-set=utf8mb4 -e "source /tmp/charset-seed-reload.sql"
+```
+
+若表/列字符集仍为 `latin1`，可再执行一次 `charset-repair.sql`（仅修复编码，不覆盖业务数据）。
+
+后端 JDBC 连接串需包含 `useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci`（见 `application.yml`），Hikari 连接池会执行 `SET NAMES utf8mb4`。
+
 `civil-service-skill-migration.sql` 会动态查找或创建“公务员考试”课程，初始化公考练习、答题和错题分析表，并写入 25 道示例题。脚本按课程、题型和题干检测已有题目，可重复执行而不会重复插入示例数据。
 
 已有数据库需要保留数据时，请根据实际功能增量执行迁移脚本：

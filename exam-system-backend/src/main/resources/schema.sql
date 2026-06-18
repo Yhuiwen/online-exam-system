@@ -1,5 +1,6 @@
 CREATE DATABASE IF NOT EXISTS exam_system DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE exam_system;
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS wrong_question;
 DROP TABLE IF EXISTS exam_violation;

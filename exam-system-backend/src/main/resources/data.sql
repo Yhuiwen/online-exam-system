@@ -1,4 +1,5 @@
 USE exam_system;
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
 -- 三个账号密码均为 123456（BCrypt）
 INSERT INTO sys_user
 (id, username, password, real_name, role, email, phone, status, create_time, update_time)
