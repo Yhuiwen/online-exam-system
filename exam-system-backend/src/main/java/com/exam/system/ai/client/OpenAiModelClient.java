@@ -25,6 +25,20 @@ public class OpenAiModelClient implements AiModelClient {
     }
 
     @Override
+    public String generateText(String prompt) {
+        Map<String, Object> request = Map.of(
+                "model", properties.getOpenai().getModel(),
+                "temperature", 0.4,
+                "messages", List.of(
+                        Map.of("role", "system", "content",
+                                "You are a helpful course QA assistant. Answer only from the provided context."),
+                        Map.of("role", "user", "content", prompt)
+                )
+        );
+        return callChatCompletions(request);
+    }
+
+    @Override
     public String generateQuestions(String prompt) {
         Map<String, Object> request = Map.of(
                 "model", properties.getOpenai().getModel(),
@@ -36,6 +50,10 @@ public class OpenAiModelClient implements AiModelClient {
                         Map.of("role", "user", "content", prompt)
                 )
         );
+        return callChatCompletions(request);
+    }
+
+    private String callChatCompletions(Map<String, Object> request) {
         try {
             OpenAiChatResponse response = restClient.post()
                     .uri("/chat/completions")

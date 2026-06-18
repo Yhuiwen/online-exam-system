@@ -14,6 +14,8 @@ services:
       - ./exam-system-backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ./exam-system-backend/src/main/resources/data.sql:/docker-entrypoint-initdb.d/02-data.sql:ro
       - ./exam-system-backend/src/main/resources/civil-service-skill-migration.sql:/docker-entrypoint-initdb.d/03-civil-service-skill-migration.sql:ro
+      - ./exam-system-backend/src/main/resources/violation-migration.sql:/docker-entrypoint-initdb.d/04-violation-migration.sql:ro
+      - ./exam-system-backend/src/main/resources/ai-knowledge-migration.sql:/docker-entrypoint-initdb.d/05-ai-knowledge-migration.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${MYSQL_PASSWORD:-123456}"]
       interval: 10s
@@ -50,6 +52,10 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       JWT_SECRET: ${JWT_SECRET:-exam-system-docker-jwt-secret-key-please-change-in-production}
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.deepseek.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-deepseek-chat}
       TZ: Asia/Shanghai
     ports:
       - "8080:8080"

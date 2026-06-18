@@ -9,6 +9,7 @@ import {
   getExams,
   updateExamStatus
 } from '../api/exam'
+import { generateAiPaper } from '../api/aiQuestion'
 import { getCourses } from '../api/course'
 import { getUsers } from '../api/user'
 import { useAuthStore } from '../store/auth'
@@ -32,6 +33,19 @@ const statusLoadingId = ref(null)
 const proctorLoading = ref(false)
 const currentExam = ref(null)
 const selectedProctors = ref([])
+const aiPaperVisible = ref(false)
+const aiPaperLoading = ref(false)
+const aiPaperExam = ref(null)
+const aiPaperSections = ref([])
+
+const defaultSection = () => ({
+  questionType: 'SINGLE_CHOICE',
+  difficulty: 'EASY',
+  knowledgePoint: '',
+  count: 5,
+  score: 5,
+  requirement: ''
+})
 
 const form = reactive({
   examName: '',
@@ -125,6 +139,38 @@ function proctorText(row) {
   return (row.proctors || []).map(item => item.teacherName).join('、') || '未分配'
 }
 
+function openAiPaper(row) {
+  aiPaperExam.value = row
+  aiPaperSections.value = [defaultSection()]
+  aiPaperVisible.value = true
+}
+
+function addAiPaperSection() {
+  aiPaperSections.value.push(defaultSection())
+}
+
+function removeAiPaperSection(index) {
+  if (aiPaperSections.value.length <= 1) return
+  aiPaperSections.value.splice(index, 1)
+}
+
+async function submitAiPaper() {
+  aiPaperLoading.value = true
+  try {
+    const preview = await generateAiPaper({
+      examId: aiPaperExam.value.id,
+      sections: aiPaperSections.value
+    })
+    aiPaperVisible.value = false
+    ElMessage.success(`AI 组卷成功，共 ${preview.questionCount} 题，总分 ${preview.totalScore}`)
+    await load()
+  } catch {
+    ElMessage.error('AI 组卷失败，请检查规则后重试')
+  } finally {
+    aiPaperLoading.value = false
+  }
+}
+
 onMounted(async () => {
   courses.value = await getCourses()
   await load()
@@ -153,6 +199,14 @@ onMounted(async () => {
         <el-table-column label="操作" min-width="520" fixed="right">
           <template #default="{ row }">
             <el-button link @click="showQuestions(row.id)">查看题目</el-button>
+            <el-button
+              v-if="row.status === 'DRAFT'"
+              link
+              type="warning"
+              @click="openAiPaper(row)"
+            >
+              AI 组卷
+            </el-button>
             <el-button
               v-if="row.status === 'DRAFT'"
               link
@@ -254,6 +308,60 @@ onMounted(async () => {
       </template>
     </el-dialog>
 
+    <el-dialog v-model="aiPaperVisible" title="AI 一键组卷" width="760px">
+      <p class="proctor-tip">
+        为考试「{{ aiPaperExam?.examName }}」按规则 AI 生成题目并写入试卷。生成后可在试卷预览中调整。
+      </p>
+      <div v-for="(section, index) in aiPaperSections" :key="index" class="ai-section">
+        <div class="ai-section-header">
+          <strong>规则 {{ index + 1 }}</strong>
+          <el-button
+            v-if="aiPaperSections.length > 1"
+            link
+            type="danger"
+            @click="removeAiPaperSection(index)"
+          >
+            删除
+          </el-button>
+        </div>
+        <el-form label-width="90px">
+          <el-form-item label="题型">
+            <el-select v-model="section.questionType">
+              <el-option label="单选题" value="SINGLE_CHOICE" />
+              <el-option label="多选题" value="MULTIPLE_CHOICE" />
+              <el-option label="判断题" value="TRUE_FALSE" />
+              <el-option label="填空题" value="FILL_BLANK" />
+              <el-option label="简答题" value="SHORT_ANSWER" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="难度">
+            <el-select v-model="section.difficulty">
+              <el-option label="简单" value="EASY" />
+              <el-option label="中等" value="MEDIUM" />
+              <el-option label="困难" value="HARD" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="知识点">
+            <el-input v-model="section.knowledgePoint" placeholder="可选" />
+          </el-form-item>
+          <el-form-item label="数量">
+            <el-input-number v-model="section.count" :min="1" :max="20" />
+          </el-form-item>
+          <el-form-item label="分值">
+            <el-input-number v-model="section.score" :min="1" :max="100" />
+          </el-form-item>
+          <el-form-item label="额外要求">
+            <el-input v-model="section.requirement" type="textarea" :rows="2" />
+          </el-form-item>
+        </el-form>
+      </div>
+      <el-button link type="primary" @click="addAiPaperSection">+ 添加规则</el-button>
+      <template #footer>
+        <el-button @click="aiPaperVisible = false">取消</el-button>
+        <el-button type="primary" :loading="aiPaperLoading" @click="submitAiPaper">开始 AI 组卷</el-button>
+      </template>
+    </el-dialog>
+
     <el-dialog v-model="questionVisible" title="试卷题目" width="720px">
       <el-table :data="questions">
         <el-table-column type="index" width="55" />
@@ -269,4 +377,16 @@ onMounted(async () => {
 
 <style scoped>
 .proctor-tip { color: #64748b; margin: 0 0 16px; line-height: 1.6; }
+.ai-section {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 16px 4px;
+  margin-bottom: 12px;
+}
+.ai-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
 </style>

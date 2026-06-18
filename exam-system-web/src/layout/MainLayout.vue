@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
@@ -12,7 +12,8 @@ const menus = computed(() => {
     { path: '/users', label: '用户管理', icon: User, roles: ['ADMIN'] },
     { path: '/operation-logs', label: '操作日志', icon: Notebook, roles: ['ADMIN'] },
     { path: '/courses', label: '课程管理', icon: Reading, roles: ['ADMIN','TEACHER'] },
-    { path: '/questions', label: '题库管理', icon: EditPen, roles: ['TEACHER'] },
+    { path: '/questions', label: '题库管理', icon: EditPen, roles: ['ADMIN','TEACHER'] },
+    { path: '/knowledge', label: '课程知识库', icon: Reading, roles: ['ADMIN','TEACHER','STUDENT'] },
     { path: '/exams', label: '考试管理', icon: Document, roles: ['ADMIN','TEACHER'] },
     { path: '/teacher/review', label: '主观题批改', icon: EditPen, roles: ['TEACHER'] },
     { path: '/teacher/monitor', label: '考试监控', icon: Monitor, roles: ['ADMIN','TEACHER'] },

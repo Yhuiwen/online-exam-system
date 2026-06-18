@@ -1,0 +1,16 @@
+# Cloudflare 命名隧道配置示例
+# 1. 安装 cloudflared: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
+# 2. 登录: cloudflared tunnel login
+# 3. 创建隧道: cloudflared tunnel create online-exam-system
+# 4. 复制本文件为 config.yml，填入 tunnel ID 与域名
+# 5. 添加 DNS: cloudflared tunnel route dns online-exam-system exam.yourdomain.com
+# 6. 启动: cloudflared tunnel --config cloudflare/config.yml run
+
+tunnel: <YOUR_TUNNEL_ID>
+credentials-file: C:\Users\<YOU>\.cloudflared\<YOUR_TUNNEL_ID>.json
+
+ingress:
+  # 推荐：只暴露前端，/api 由 Vite 代理到本地 8080
+  - hostname: exam.yourdomain.com
+    service: http://127.0.0.1:5173
+  - service: http_status:404

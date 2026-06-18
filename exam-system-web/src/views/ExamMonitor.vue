@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getMonitorableExams } from '../api/exam'
 import {
@@ -7,6 +7,8 @@ import {
   getStudentExamViolations
 } from '../api/examViolation'
 import { formatRiskLevel } from '../utils/enumMap'
+
+const POLL_INTERVAL_MS = 30000
 
 const exams = ref([])
 const examId = ref(null)
@@ -16,15 +18,10 @@ const detailLoading = ref(false)
 const detailVisible = ref(false)
 const selectedStudent = ref(null)
 const violations = ref([])
+const riskFilter = ref('')
+const autoRefresh = ref(true)
 
-const countFields = {
-  PAGE_HIDDEN: 'pageHiddenCount',
-  WINDOW_BLUR: 'windowBlurCount',
-  FULLSCREEN_EXIT: 'fullscreenExitCount',
-  COPY: 'copyCount',
-  PASTE: 'pasteCount',
-  RIGHT_CLICK: 'rightClickCount'
-}
+let pollTimer = null
 
 const riskTagTypes = {
   NORMAL: 'success',
@@ -44,45 +41,43 @@ const violationLabels = {
   OTHER: '其他'
 }
 
+const filteredRows = computed(() => {
+  if (!riskFilter.value) return rows.value
+  return rows.value.filter(row => row.riskLevel === riskFilter.value)
+})
+
 function formatTime(value) {
   return value ? String(value).replace('T', ' ') : '-'
 }
 
-function countByType(details) {
-  const counts = {
-    pageHiddenCount: 0,
-    windowBlurCount: 0,
-    fullscreenExitCount: 0,
-    copyCount: 0,
-    pasteCount: 0,
-    rightClickCount: 0
-  }
-  details.forEach(item => {
-    const field = countFields[item.violationType]
-    if (field) counts[field]++
-  })
-  return counts
-}
-
-async function loadSummary() {
+async function loadSummary(silent = false) {
   if (!examId.value) {
     rows.value = []
     return
   }
-  loading.value = true
+  if (!silent) loading.value = true
   try {
-    const summaries = await getExamViolationSummary(examId.value)
-    rows.value = await Promise.all(
-      summaries.map(async summary => {
-        const details = await getStudentExamViolations(summary.studentExamId)
-        return { ...summary, ...countByType(details) }
-      })
-    )
+    rows.value = await getExamViolationSummary(examId.value)
   } catch {
-    rows.value = []
-    ElMessage.error('考试异常汇总加载失败')
+    if (!silent) {
+      rows.value = []
+      ElMessage.error('考试异常汇总加载失败')
+    }
   } finally {
-    loading.value = false
+    if (!silent) loading.value = false
+  }
+}
+
+function startPolling() {
+  stopPolling()
+  if (!autoRefresh.value) return
+  pollTimer = setInterval(() => loadSummary(true), POLL_INTERVAL_MS)
+}
+
+function stopPolling() {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
   }
 }
 
@@ -100,52 +95,77 @@ async function openDetails(row) {
   }
 }
 
+function onAutoRefreshChange(value) {
+  if (value) startPolling()
+  else stopPolling()
+}
+
 onMounted(async () => {
   try {
     exams.value = await getMonitorableExams()
     examId.value = exams.value[0]?.id || null
     await loadSummary()
+    startPolling()
   } catch {
     ElMessage.error('考试列表加载失败')
   }
 })
+
+onBeforeUnmount(stopPolling)
 </script>
 
 <template>
   <div class="page">
     <div class="page-header">
       <h1 class="page-title">考试监控</h1>
-      <el-select
-        v-model="examId"
-        placeholder="选择考试"
-        filterable
-        style="width: 280px"
-        @change="loadSummary"
-      >
-        <el-option
-          v-for="exam in exams"
-          :key="exam.id"
-          :label="exam.examName"
-          :value="exam.id"
+      <div class="toolbar">
+        <el-select
+          v-model="examId"
+          placeholder="选择考试"
+          filterable
+          style="width: 280px"
+          @change="loadSummary"
+        >
+          <el-option
+            v-for="exam in exams"
+            :key="exam.id"
+            :label="exam.examName"
+            :value="exam.id"
+          />
+        </el-select>
+        <el-select v-model="riskFilter" clearable placeholder="风险等级" style="width: 140px">
+          <el-option label="正常" value="NORMAL" />
+          <el-option label="低风险" value="LOW" />
+          <el-option label="中风险" value="MEDIUM" />
+          <el-option label="高风险" value="HIGH" />
+        </el-select>
+        <el-switch
+          v-model="autoRefresh"
+          active-text="自动刷新"
+          @change="onAutoRefreshChange"
         />
-      </el-select>
+        <el-button @click="loadSummary()">立即刷新</el-button>
+      </div>
     </div>
 
     <div class="panel">
       <el-table
         v-loading="loading"
-        :data="rows"
+        :data="filteredRows"
         empty-text="该考试暂无异常记录"
+        default-sort="{ prop: 'riskScore', order: 'descending' }"
       >
         <el-table-column prop="studentName" label="学生姓名" min-width="110" />
         <el-table-column prop="studentExamId" label="答卷 ID" width="90" />
-        <el-table-column prop="violationCount" label="异常总次数" width="105" />
+        <el-table-column prop="riskScore" label="风险评分" width="95" sortable />
+        <el-table-column prop="violationCount" label="异常总次数" width="105" sortable />
         <el-table-column prop="pageHiddenCount" label="切屏次数" width="90" />
         <el-table-column prop="windowBlurCount" label="失焦次数" width="90" />
         <el-table-column prop="fullscreenExitCount" label="退出全屏" width="95" />
         <el-table-column prop="copyCount" label="复制次数" width="90" />
         <el-table-column prop="pasteCount" label="粘贴次数" width="90" />
         <el-table-column prop="rightClickCount" label="右键次数" width="90" />
+        <el-table-column prop="devtoolsCount" label="DevTools" width="95" />
         <el-table-column label="风险等级" width="100">
           <template #default="{ row }">
             <el-tag :type="riskTagTypes[row.riskLevel] || 'info'">
@@ -189,5 +209,12 @@ onMounted(async () => {
 <style scoped>
 .panel {
   overflow: hidden;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
 }
 </style>

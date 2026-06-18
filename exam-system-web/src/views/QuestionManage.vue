@@ -9,7 +9,7 @@ import {
   importQuestions,
   updateQuestion
 } from '../api/question'
-import { generateAiQuestions, saveAiQuestions } from '../api/aiQuestion'
+import { generateAiQuestions, parseAiDocument, saveAiQuestions } from '../api/aiQuestion'
 import { getCourses } from '../api/course'
 import { useAuthStore } from '../store/auth'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -35,6 +35,10 @@ const importFile = ref(null)
 const importResult = ref(null)
 const importing = ref(false)
 const aiVisible = ref(false)
+const parseVisible = ref(false)
+const parseLoading = ref(false)
+const parseFile = ref(null)
+const parseForm = reactive({ courseId: null, knowledgePoint: '' })
 const aiGenerating = ref(false)
 const aiSaving = ref(false)
 const aiPreviewRows = ref([])
@@ -214,12 +218,45 @@ async function saveAiPreview() {
     })
     ElMessage.success('AI questions saved')
     aiVisible.value = false
+    parseVisible.value = false
     await load()
   } catch (error) {
     ElMessage.error(error?.message || 'Failed to save AI questions')
   } finally {
     aiSaving.value = false
   }
+}
+
+function openParseDialog() {
+  parseForm.courseId = query.courseId || courses.value[0]?.id || null
+  parseForm.knowledgePoint = ''
+  parseFile.value = null
+  aiPreviewRows.value = []
+  parseVisible.value = true
+}
+
+async function parseDocument() {
+  if (!parseForm.courseId) return ElMessage.warning('请选择课程')
+  if (!parseFile.value) return ElMessage.warning('请选择 PDF 或 Word 文档')
+  parseLoading.value = true
+  try {
+    aiForm.courseId = parseForm.courseId
+    aiPreviewRows.value = await parseAiDocument(
+      parseForm.courseId,
+      parseFile.value,
+      parseForm.knowledgePoint
+    )
+    if (!aiPreviewRows.value.length) ElMessage.warning('未能从文档解析出题目')
+    else ElMessage.success(`已解析 ${aiPreviewRows.value.length} 道题目，请确认后保存`)
+  } catch (error) {
+    ElMessage.error(error?.message || '文档解析失败')
+  } finally {
+    parseLoading.value = false
+  }
+}
+
+function onParseFileChange(file) {
+  parseFile.value = file.raw
 }
 
 function resetSourceFields() {
@@ -329,6 +366,7 @@ onMounted(async () => {
         <el-button :icon="Upload" @click="openImport">导入题库</el-button>
         <el-button :icon="Download" @click="exportBank">导出题库</el-button>
         <el-button v-if="canUseAi" type="success" :icon="MagicStick" @click="openAiDialog">AI 出题</el-button>
+        <el-button v-if="canUseAi" @click="openParseDialog">解析文档</el-button>
         <el-button type="primary" @click="open()">新增题目</el-button>
       </div>
     </div>
@@ -526,6 +564,45 @@ onMounted(async () => {
 
       <template #footer>
         <el-button @click="aiVisible = false">取消</el-button>
+        <el-button type="primary" :loading="aiSaving" :disabled="!aiPreviewRows.length" @click="saveAiPreview">
+          保存入题库
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="parseVisible" title="解析试卷文档" width="95%" top="4vh">
+      <el-form inline>
+        <el-form-item label="课程">
+          <el-select v-model="parseForm.courseId" style="width: 200px">
+            <el-option v-for="course in courses" :key="course.id" :label="course.courseName" :value="course.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="知识点">
+          <el-input v-model="parseForm.knowledgePoint" placeholder="可选" style="width: 200px" />
+        </el-form-item>
+        <el-form-item label="文档">
+          <el-upload
+            :auto-upload="false"
+            :limit="1"
+            accept=".pdf,.docx,.txt,.md"
+            :on-change="onParseFileChange"
+          >
+            <el-button type="primary">选择 PDF / Word</el-button>
+          </el-upload>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="success" :loading="parseLoading" @click="parseDocument">开始解析</el-button>
+        </el-form-item>
+      </el-form>
+      <el-table v-if="aiPreviewRows.length" :data="aiPreviewRows" max-height="420" style="margin-top: 12px">
+        <el-table-column prop="content" label="题干" min-width="220" />
+        <el-table-column label="题型" width="120">
+          <template #default="{ row }">{{ formatQuestionType(row.questionType) }}</template>
+        </el-table-column>
+        <el-table-column prop="correctAnswer" label="答案" width="100" />
+      </el-table>
+      <template #footer>
+        <el-button @click="parseVisible = false">取消</el-button>
         <el-button type="primary" :loading="aiSaving" :disabled="!aiPreviewRows.length" @click="saveAiPreview">
           保存入题库
         </el-button>

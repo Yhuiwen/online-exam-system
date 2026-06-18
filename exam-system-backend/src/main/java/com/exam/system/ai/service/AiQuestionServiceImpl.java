@@ -2,10 +2,20 @@ package com.exam.system.ai.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.exam.system.ai.client.AiModelClient;
+import com.exam.system.ai.dto.AiPaperGenerateRequest;
+import com.exam.system.ai.dto.AiPaperSectionDTO;
 import com.exam.system.ai.dto.AiQuestionGenerateRequest;
 import com.exam.system.ai.dto.AiQuestionSaveRequest;
 import com.exam.system.ai.vo.AiGeneratedQuestionVO;
+import com.exam.system.ai.knowledge.service.DocumentTextExtractor;
+import com.exam.system.dto.ManualPaperQuestionDTO;
+import com.exam.system.dto.ManualPaperSaveRequest;
 import com.exam.system.entity.Course;
+import com.exam.system.entity.Exam;
+import com.exam.system.mapper.ExamMapper;
+import com.exam.system.service.PaperService;
+import com.exam.system.vo.PaperPreviewVO;
+import org.springframework.web.multipart.MultipartFile;
 import com.exam.system.entity.Question;
 import com.exam.system.exception.BusinessException;
 import com.exam.system.mapper.CourseMapper;
@@ -39,6 +49,9 @@ public class AiQuestionServiceImpl implements AiQuestionService {
     private final AiModelClient aiModelClient;
     private final CourseMapper courseMapper;
     private final QuestionMapper questionMapper;
+    private final ExamMapper examMapper;
+    private final PaperService paperService;
+    private final DocumentTextExtractor documentTextExtractor;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -85,6 +98,119 @@ public class AiQuestionServiceImpl implements AiQuestionService {
             questionMapper.insert(question);
             databaseQuestions.add(key);
         }
+    }
+
+    @Override
+    @Transactional
+    public PaperPreviewVO generatePaper(AiPaperGenerateRequest request) {
+        if (request == null || request.getExamId() == null) throw new BusinessException("考试不能为空");
+        if (request.getSections() == null || request.getSections().isEmpty()) {
+            throw new BusinessException("组卷规则不能为空");
+        }
+        Exam exam = examMapper.selectById(request.getExamId());
+        if (exam == null) throw new BusinessException("考试不存在");
+        if (!"DRAFT".equals(exam.getStatus())) throw new BusinessException("考试已发布，禁止 AI 组卷");
+        requireCourse(exam.getCourseId());
+
+        int totalCount = request.getSections().stream().mapToInt(AiPaperSectionDTO::getCount).sum();
+        if (totalCount < 1 || totalCount > 50) throw new BusinessException("AI 组卷总题量必须在 1 到 50 之间");
+
+        List<ManualPaperQuestionDTO> paperItems = new ArrayList<>();
+        int sortNo = 1;
+        for (AiPaperSectionDTO section : request.getSections()) {
+            AiQuestionGenerateRequest generateRequest = toGenerateRequest(exam.getCourseId(), section);
+            List<AiGeneratedQuestionVO> generated = generate(generateRequest);
+            List<Long> savedIds = saveAndReturnIds(exam.getCourseId(), generated);
+            for (Long questionId : savedIds) {
+                paperItems.add(new ManualPaperQuestionDTO(questionId, section.getScore(), sortNo++));
+            }
+        }
+        return paperService.saveManualPaper(exam.getId(), new ManualPaperSaveRequest(null, paperItems));
+    }
+
+    @Override
+    public List<AiGeneratedQuestionVO> parseDocument(Long courseId, MultipartFile file, String knowledgePoint) {
+        Course course = requireCourse(courseId);
+        String text = documentTextExtractor.extract(file).text();
+        if (text.length() > 12000) text = text.substring(0, 12000);
+        List<AiGeneratedQuestionVO> questions = parseAiResponse(
+                aiModelClient.generateQuestions(buildDocumentParsePrompt(course, text, knowledgePoint)));
+        if (questions.isEmpty()) throw new BusinessException("未能从文档中解析出有效题目");
+        if (questions.size() > 20) throw new BusinessException("文档解析题目超过 20 道，请拆分文档后重试");
+        for (AiGeneratedQuestionVO question : questions) {
+            if (!hasText(question.getKnowledgePoint())) question.setKnowledgePoint(knowledgePoint);
+            validateQuestion(question);
+        }
+        return questions;
+    }
+
+    private AiQuestionGenerateRequest toGenerateRequest(Long courseId, AiPaperSectionDTO section) {
+        AiQuestionGenerateRequest request = new AiQuestionGenerateRequest();
+        request.setCourseId(courseId);
+        request.setQuestionType(section.getQuestionType());
+        request.setDifficulty(section.getDifficulty());
+        request.setKnowledgePoint(section.getKnowledgePoint());
+        request.setCount(section.getCount());
+        request.setScore(section.getScore());
+        request.setRequirement(section.getRequirement());
+        return request;
+    }
+
+    private List<Long> saveAndReturnIds(Long courseId, List<AiGeneratedQuestionVO> questions) {
+        Set<QuestionDuplicateKey> databaseQuestions = questionMapper.selectList(
+                        new LambdaQueryWrapper<Question>()
+                                .select(Question::getCourseId, Question::getQuestionType, Question::getContent)
+                                .eq(Question::getCourseId, courseId))
+                .stream().map(this::duplicateKey).collect(Collectors.toSet());
+        Set<QuestionDuplicateKey> batchQuestions = new HashSet<>();
+        List<Long> ids = new ArrayList<>();
+        for (AiGeneratedQuestionVO item : questions) {
+            validateQuestion(item);
+            QuestionDuplicateKey key = new QuestionDuplicateKey(
+                    courseId, normalizeUpper(item.getQuestionType()), trim(item.getContent()));
+            if (!batchQuestions.add(key)) throw new BusinessException("AI 生成了重复题目");
+            if (databaseQuestions.contains(key)) throw new BusinessException("题目已存在于题库: " + item.getContent());
+            Question question = toEntity(courseId, item);
+            QuestionSourceValidator.validateAndNormalize(question);
+            question.setCreateUserId(SecurityUtils.userId());
+            questionMapper.insert(question);
+            databaseQuestions.add(key);
+            ids.add(question.getId());
+        }
+        return ids;
+    }
+
+    private String buildDocumentParsePrompt(Course course, String text, String knowledgePoint) {
+        return """
+                Parse exam questions from the document below for course "%s".
+                Return JSON only. Do not return Markdown or explanatory text.
+                questionType must be one of: SINGLE_CHOICE, MULTIPLE_CHOICE, TRUE_FALSE, FILL_BLANK, SHORT_ANSWER.
+                difficulty must be one of: EASY, MEDIUM, HARD.
+                Extract at most 20 complete questions with answer and analysis.
+                Default knowledgePoint to: %s
+
+                Required JSON shape:
+                {
+                  "questions": [
+                    {
+                      "questionType": "SINGLE_CHOICE",
+                      "content": "question stem",
+                      "optionA": "option A",
+                      "optionB": "option B",
+                      "optionC": "option C",
+                      "optionD": "option D",
+                      "correctAnswer": "A",
+                      "analysis": "analysis",
+                      "difficulty": "EASY",
+                      "score": 5,
+                      "knowledgePoint": "knowledge point"
+                    }
+                  ]
+                }
+
+                DOCUMENT:
+                %s
+                """.formatted(course.getCourseName(), nullToEmpty(knowledgePoint), text);
     }
 
     private void validateGenerateRequest(AiQuestionGenerateRequest request) {

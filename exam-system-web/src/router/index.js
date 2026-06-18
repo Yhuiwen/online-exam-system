@@ -12,6 +12,7 @@ const routes = [
       { path: 'operation-logs', component: () => import('../views/OperationLog.vue'), meta: { roles: ['ADMIN'] } },
       { path: 'courses', component: () => import('../views/CourseManage.vue'), meta: { roles: ['ADMIN', 'TEACHER'] } },
       { path: 'questions', component: () => import('../views/QuestionManage.vue'), meta: { roles: ['ADMIN', 'TEACHER'] } },
+      { path: 'knowledge', component: () => import('../views/KnowledgeQa.vue'), meta: { roles: ['ADMIN', 'TEACHER', 'STUDENT'] } },
       { path: 'exams', component: () => import('../views/ExamManage.vue'), meta: { roles: ['ADMIN', 'TEACHER'] } },
       { path: 'auto-paper/:id', component: () => import('../views/AutoPaper.vue'), meta: { roles: ['ADMIN', 'TEACHER'] } },
       { path: 'teacher/exam/:examId/manual-paper', component: () => import('../views/ManualPaper.vue'), meta: { roles: ['ADMIN', 'TEACHER'] } },

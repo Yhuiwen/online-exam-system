@@ -5,8 +5,20 @@ import org.springframework.stereotype.Component;
 @Component
 public class MockAiModelClient implements AiModelClient {
     @Override
+    public String generateText(String prompt) {
+        if (prompt != null && prompt.contains("RAG_KNOWLEDGE_QA")) {
+            return "根据已上传课程资料，相关内容主要包括：" + summarizeContext(prompt)
+                    + "\n\n引用片段：[片段1]";
+        }
+        return generateQuestions(prompt);
+    }
+
+    @Override
     public String generateQuestions(String prompt) {
         int count = extractCount(prompt);
+        if (prompt != null && prompt.contains("Parse exam questions") && count <= 1) {
+            count = 3;
+        }
         String type = extractValue(prompt, "questionType", "SINGLE_CHOICE");
         String difficulty = extractValue(prompt, "difficulty", "EASY");
         String score = extractValue(prompt, "score", "5");
@@ -108,5 +120,14 @@ public class MockAiModelClient implements AiModelClient {
 
     private String escapeJson(String value) {
         return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private String summarizeContext(String prompt) {
+        String marker = "[片段1]";
+        int start = prompt.indexOf(marker);
+        if (start < 0) return "资料中提供了与问题相关的课程知识点。";
+        String text = prompt.substring(start + marker.length()).replaceAll("\\s+", " ").trim();
+        if (text.length() > 120) text = text.substring(0, 120) + "...";
+        return text.isBlank() ? "资料中提供了与问题相关的课程知识点。" : text;
     }
 }

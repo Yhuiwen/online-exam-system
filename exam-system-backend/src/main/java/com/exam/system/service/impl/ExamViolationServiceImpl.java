@@ -16,6 +16,7 @@ import com.exam.system.mapper.SysUserMapper;
 import com.exam.system.security.SecurityUtils;
 import com.exam.system.service.ExamViolationService;
 import com.exam.system.support.RuntimeSupport;
+import com.exam.system.util.ViolationRiskUtils;
 import com.exam.system.vo.ExamViolationSummaryVO;
 import com.exam.system.vo.ExamViolationVO;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,8 @@ import org.springframework.security.access.AccessDeniedException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -95,6 +98,8 @@ public class ExamViolationServiceImpl implements ExamViolationService {
         for (StudentExam record : records) {
             result.add(summary(record));
         }
+        result.sort(Comparator.comparingInt(ExamViolationSummaryVO::riskScore).reversed()
+                .thenComparing(ExamViolationSummaryVO::violationCount, Comparator.reverseOrder()));
         return result;
     }
 
@@ -134,13 +139,27 @@ public class ExamViolationServiceImpl implements ExamViolationService {
         List<ExamViolation> violations = violationMapper.selectList(new LambdaQueryWrapper<ExamViolation>()
                 .eq(ExamViolation::getStudentExamId, record.getId())
                 .orderByDesc(ExamViolation::getCreateTime));
+        Map<String, Long> typeCounts = new HashMap<>();
+        for (ExamViolation violation : violations) {
+            typeCounts.merge(violation.getViolationType(), 1L, Long::sum);
+        }
         long count = violations.size();
+        int riskScore = ViolationRiskUtils.scoreFromCounts(typeCounts);
+        String riskLevel = ViolationRiskUtils.levelFromScore(riskScore);
         LocalDateTime lastTime = violations.stream().map(ExamViolation::getCreateTime)
                 .max(Comparator.naturalOrder()).orElse(null);
         SysUser student = userMapper.selectById(record.getStudentId());
         String studentName = student == null ? "学生#" + record.getStudentId() : student.getRealName();
         return new ExamViolationSummaryVO(
-                record.getId(), record.getStudentId(), studentName, count, riskLevel(count), lastTime
+                record.getId(), record.getStudentId(), studentName, count, riskLevel, riskScore,
+                typeCounts.getOrDefault("PAGE_HIDDEN", 0L),
+                typeCounts.getOrDefault("WINDOW_BLUR", 0L),
+                typeCounts.getOrDefault("FULLSCREEN_EXIT", 0L),
+                typeCounts.getOrDefault("COPY", 0L),
+                typeCounts.getOrDefault("PASTE", 0L),
+                typeCounts.getOrDefault("RIGHT_CLICK", 0L),
+                typeCounts.getOrDefault("DEVTOOLS_SUSPECTED", 0L),
+                lastTime
         );
     }
 
@@ -162,13 +181,6 @@ public class ExamViolationServiceImpl implements ExamViolationService {
         if (proctorCount == 0) {
             throw new BusinessException(403, "无权查看该考试监控数据");
         }
-    }
-
-    private String riskLevel(long count) {
-        if (count == 0) return "NORMAL";
-        if (count <= 2) return "LOW";
-        if (count <= 5) return "MEDIUM";
-        return "HIGH";
     }
 
     private ExamViolationVO toVO(ExamViolation violation) {

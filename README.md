@@ -91,15 +91,23 @@
 - 记录切换页面、窗口失焦、退出全屏、复制、粘贴和右键等异常行为
 - 前后端五秒重复上报限制
 - 教师查看考试异常汇总与学生异常明细
-- 根据异常次数计算正常、低风险、中风险和高风险等级
+- **加权风险评分**（0 起，按行为类型累计）与正常、低、中、高风险等级
+- 监控页支持风险等级筛选与 30 秒自动刷新
 - 异常监控不会自动交卷，不影响正常答题流程
 
-### 工程管理
+### AI 与知识库
 
-- 前后端分离目录结构
-- 统一接口返回格式与全局异常处理
-- GitHub 版本管理
-- Maven 与 Vite 独立构建
+- **AI 出题**：按课程/题型/难度/知识点生成题目，教师审核后入库
+- **AI 一键组卷**：按多条规则 AI 生成题目并写入草稿考试试卷
+- **文档解析入库**：从 PDF/Word 提取题目预览，确认后入库
+- **RAG 课程知识库**：上传资料、关键词检索、智能答疑与引用来源
+
+### 工程化
+
+- Docker Compose 一键启动 MySQL + Redis + 后端 + 前端
+- Springdoc Swagger 与 Knife4j 接口文档
+- GitHub Actions CI（后端测试 + 前端构建）
+- 单元测试覆盖防作弊评分、AI 出题等核心逻辑
 
 ## 系统角色
 
@@ -249,6 +257,50 @@ Vite 开发服务器会将 `/api` 请求代理到 `http://localhost:8080`。
 npm run build
 ```
 
+## Docker Compose 一键部署
+
+项目根目录提供 `docker-compose.yml`，包含 MySQL、Redis、后端和前端（Nginx 反代 API）。
+
+1. 复制环境变量模板并按需修改：
+
+```powershell
+copy .env.example .env
+```
+
+2. 启动全部服务：
+
+```powershell
+docker compose up -d --build
+```
+
+3. 访问地址：
+
+| 服务 | 地址 |
+| --- | --- |
+| 前端 | http://localhost:5173 |
+| 后端 API | http://localhost:8080 |
+| Swagger UI | http://localhost:8080/swagger-ui.html |
+| Knife4j | http://localhost:8080/doc.html |
+
+首次启动会自动执行 `schema.sql`、`data.sql`、公考迁移、**违规记录迁移**和**知识库迁移**。
+
+Docker 环境下 Redis 默认启用（`REDIS_ENABLED=true`）。AI 功能通过 `.env` 中的 `AI_PROVIDER`、`OPENAI_API_KEY` 等变量配置；未配置 Key 时使用 Mock 模式。
+
+停止服务：
+
+```powershell
+docker compose down
+```
+
+## 接口文档
+
+后端集成 Springdoc OpenAPI 与 Knife4j：
+
+- Swagger UI：`http://localhost:8080/swagger-ui.html`
+- Knife4j 文档：`http://localhost:8080/doc.html`
+
+除登录/注册外，其余接口需在 Knife4j 或 Swagger 页面点击 **Authorize**，填入 `Bearer <JWT Token>`。
+
 ## 默认测试账号
 
 测试账号的登录密码均为 `123456`。
@@ -361,15 +413,11 @@ npm run build
 
 ## 后续优化方向
 
-- 引入 Redis 缓存、登录状态控制和热点数据加速
-- 使用 WebSocket 实现考试倒计时同步与实时监考
-- 增加考试通知、消息中心和教师批量发布能力
-- 增加题目图片、公式和富文本编辑支持
-- 增加题库标签体系、收藏、审核与版本记录
-- 优化自动组卷策略，引入知识点覆盖率和试卷难度评分
-- 增加 Docker Compose 一键部署和 CI/CD 流程
-- 完善单元测试、接口测试和端到端自动化测试
-- 增加操作日志、审计记录和敏感配置管理
+- 使用 WebSocket 实现考试倒计时同步与实时监考推送
+- RAG 向量语义检索（Milvus / pgvector 等）
+- 题目图片、公式和富文本编辑支持
+- 端到端自动化测试（Playwright / Cypress）
+- 操作日志审计与敏感配置集中管理
 
 ## 版本管理
 
@@ -407,14 +455,16 @@ $env:AI_PROVIDER="mock"
 
 ### 配置真实大模型
 
-后端支持 OpenAI 兼容接口，API Key 不写入代码，优先从环境变量读取：
+后端支持 **OpenAI 兼容接口**（含 DeepSeek），API Key 不写入代码，优先从环境变量读取：
 
 ```powershell
 $env:AI_PROVIDER="openai"
 $env:OPENAI_API_KEY="你的 API Key"
-$env:OPENAI_MODEL="gpt-4o-mini"
-$env:OPENAI_BASE_URL="https://api.openai.com/v1"
+$env:OPENAI_BASE_URL="https://api.deepseek.com/v1"
+$env:OPENAI_MODEL="deepseek-chat"
 ```
+
+也可复制 `.env.example` 为 `.env` 后执行 `.\start-dev-with-ai.ps1` 启动后端。
 
 `application.yml` 中的默认配置如下，没有 Key 或 provider 不是 `openai` 时会自动使用 Mock：
 
@@ -434,3 +484,97 @@ ai:
 3. 填写课程、题型、难度、知识点、数量、分值和额外要求。
 4. 点击“生成题目”，检查并编辑预览列表。
 5. 删除不需要的题目，确认无误后点击“保存入题库”。
+
+## AI 课程知识库答疑
+
+本项目新增轻量级 RAG 课程知识库答疑功能，适合课程资料规模较小、需要稳定演示的场景。第一版不引入 Milvus、Elasticsearch、LangChain 或向量数据库，而是将课程资料解析为数据库文本片段，通过关键词文本相似度检索相关 chunk，再把“用户问题 + 相关片段”交给后端 AI 模型生成答案。
+
+### 功能说明
+
+- 教师和管理员可按课程上传资料。
+- 系统解析文档文本并切分为 chunk，保存到数据库。
+- 学生、教师和管理员都可以选择课程提问。
+- 后端只检索当前课程下的相关片段，不会把全库内容拼给 AI。
+- 如果未检索到足够依据，系统直接返回“当前课程资料中未找到足够依据，请补充资料或换个问题。”，不调用真实 AI，避免模型编造。
+- 答案会展示引用来源和相关片段预览。
+
+### 支持文件类型
+
+- PDF：使用 Apache PDFBox 解析文字型 PDF，不包含 OCR。
+- DOCX：使用 Apache POI XWPFDocument 解析段落文本。
+- TXT / MD：按 UTF-8 文本读取。
+- 单文件大小限制：10MB。
+
+### 数据库 Migration
+
+新增 migration 文件：
+
+```sql
+SOURCE ai-knowledge-migration.sql;
+```
+
+新增表：
+
+- `course_knowledge_document`：课程资料主表。
+- `course_knowledge_chunk`：课程资料文本片段表。
+
+在已有数据库中执行：
+
+```bash
+cd exam-system-backend/src/main/resources
+mysql -uroot -p --default-character-set=utf8mb4 exam_system
+```
+
+然后执行：
+
+```sql
+SOURCE ai-knowledge-migration.sql;
+```
+
+### 接口列表
+
+- `POST /api/ai/knowledge/documents`：上传课程资料，`ADMIN`、`TEACHER` 可用。
+- `GET /api/ai/knowledge/documents?courseId=xxx`：查询课程资料列表，三类角色可用。
+- `DELETE /api/ai/knowledge/documents/{id}`：删除资料并同步删除 chunk，`ADMIN`、`TEACHER` 可用。
+- `POST /api/ai/knowledge/ask`：课程知识库答疑，三类角色可用。
+
+### 使用流程
+
+1. 管理员或教师进入“课程知识库”。
+2. 选择课程，填写资料标题，上传 PDF/DOCX/TXT/MD。
+3. 系统解析并显示文档列表和片段数量。
+4. 学生、教师或管理员在答疑区输入问题。
+5. 系统展示 AI 回答、引用文档、片段序号、相关度分数和内容预览。
+
+### AI 一键组卷
+
+草稿状态考试在「考试管理」页点击 **AI 组卷**，可配置多条出题规则（题型、难度、数量、分值）。系统会 AI 生成题目、写入题库并组装试卷，完成后可在试卷预览中调整。
+
+接口：`POST /api/ai/questions/generate-paper`
+
+### 文档解析入库
+
+「题库管理」页点击 **解析文档**，上传 PDF/DOCX 后 AI 提取题目预览，教师确认后保存入库。
+
+接口：`POST /api/ai/questions/parse-document`
+
+### Mock 模式
+
+默认 `ai.provider=mock`。Mock 模式不会调用外部 API，也可以完整演示上传资料、检索片段、生成答疑和显示引用来源流程。
+
+### OpenAI 模式配置
+
+```powershell
+$env:AI_PROVIDER="openai"
+$env:OPENAI_API_KEY="你的 API Key"
+$env:OPENAI_MODEL="gpt-4o-mini"
+$env:OPENAI_BASE_URL="https://api.openai.com/v1"
+```
+
+API Key 只在后端读取，不会返回给前端，也不会写死在代码里。
+
+### 注意事项
+
+- 第一版采用数据库文本片段检索，暂未接入 Embedding 和向量数据库。
+- 适合课程资料较少、演示和课程设计场景。
+- 后续可升级为 Embedding + 向量数据库，提高语义检索能力。
