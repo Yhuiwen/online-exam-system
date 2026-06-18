@@ -14,5 +14,6 @@ public class CourseKnowledgeChunk {
     private Integer chunkIndex;
     private String content;
     private String contentHash;
+    private String embeddingJson;
     private LocalDateTime createTime;
 }

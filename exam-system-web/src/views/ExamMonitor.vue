@@ -1,14 +1,17 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getMonitorableExams } from '../api/exam'
 import {
   getExamViolationSummary,
   getStudentExamViolations
 } from '../api/examViolation'
+import { useAuthStore } from '../store/auth'
 import { formatRiskLevel } from '../utils/enumMap'
+import { connectExamMonitor } from '../utils/monitorSocket'
 
 const POLL_INTERVAL_MS = 30000
+const auth = useAuthStore()
 
 const exams = ref([])
 const examId = ref(null)
@@ -22,6 +25,7 @@ const riskFilter = ref('')
 const autoRefresh = ref(true)
 
 let pollTimer = null
+let disconnectWs = null
 
 const riskTagTypes = {
   NORMAL: 'success',
@@ -100,18 +104,40 @@ function onAutoRefreshChange(value) {
   else stopPolling()
 }
 
+function applySummaryUpdate(summary) {
+  if (!summary?.studentExamId) return
+  const index = rows.value.findIndex(row => row.studentExamId === summary.studentExamId)
+  if (index >= 0) rows.value[index] = summary
+  else rows.value.push(summary)
+  rows.value.sort((a, b) => b.riskScore - a.riskScore || b.violationCount - a.violationCount)
+}
+
+function connectWs() {
+  disconnectWs?.()
+  if (!examId.value || !auth.token) return
+  disconnectWs = connectExamMonitor(auth.token, examId.value, applySummaryUpdate)
+}
+
+watch(examId, () => {
+  connectWs()
+})
+
 onMounted(async () => {
   try {
     exams.value = await getMonitorableExams()
     examId.value = exams.value[0]?.id || null
     await loadSummary()
     startPolling()
+    connectWs()
   } catch {
     ElMessage.error('考试列表加载失败')
   }
 })
 
-onBeforeUnmount(stopPolling)
+onBeforeUnmount(() => {
+  stopPolling()
+  disconnectWs?.()
+})
 </script>
 
 <template>

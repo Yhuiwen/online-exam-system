@@ -7,6 +7,7 @@ import com.exam.system.ai.knowledge.mapper.CourseKnowledgeChunkMapper;
 import com.exam.system.ai.knowledge.mapper.CourseKnowledgeDocumentMapper;
 import com.exam.system.ai.knowledge.vo.KnowledgeDocumentVO;
 import com.exam.system.ai.knowledge.vo.KnowledgeUploadResponse;
+import com.exam.system.ai.embedding.ChunkEmbeddingService;
 import com.exam.system.entity.Course;
 import com.exam.system.exception.BusinessException;
 import com.exam.system.mapper.CourseMapper;
@@ -27,6 +28,7 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
     private final CourseKnowledgeChunkMapper chunkMapper;
     private final DocumentTextExtractor textExtractor;
     private final DocumentChunker chunker;
+    private final ChunkEmbeddingService chunkEmbeddingService;
 
     @Override
     @Transactional
@@ -57,6 +59,7 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
             chunk.setContent(chunks.get(i));
             chunk.setContentHash(HashUtils.sha256(chunks.get(i)));
             chunk.setCreateTime(LocalDateTime.now());
+            chunkEmbeddingService.saveEmbedding(chunk);
             chunkMapper.insert(chunk);
         }
         return new KnowledgeUploadResponse(document.getId(), courseId, document.getTitle(),

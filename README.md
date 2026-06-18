@@ -413,10 +413,9 @@ docker compose down
 
 ## 后续优化方向
 
-- 使用 WebSocket 实现考试倒计时同步与实时监考推送
-- RAG 向量语义检索（Milvus / pgvector 等）
+- RAG 接入 Milvus / pgvector 等专用向量数据库（当前为 MySQL JSON + 内存余弦相似度）
 - 题目图片、公式和富文本编辑支持
-- 端到端自动化测试（Playwright / Cypress）
+- 完整 E2E 联调测试（`E2E_WITH_BACKEND=1 npm run test:e2e`）
 - 操作日志审计与敏感配置集中管理
 
 ## 版本管理
@@ -545,6 +544,55 @@ SOURCE ai-knowledge-migration.sql;
 3. 系统解析并显示文档列表和片段数量。
 4. 学生、教师或管理员在答疑区输入问题。
 5. 系统展示 AI 回答、引用文档、片段序号、相关度分数和内容预览。
+
+### 向量语义检索（v2）
+
+第二版检索采用 **关键词 + 向量混合排序**（默认权重：向量 65% / 关键词 35%）：
+
+1. 上传资料时为每个 chunk 生成 embedding 并存入 `embedding_json`。
+2. 提问时对问题做 embedding，与 chunk 计算余弦相似度。
+3. 与关键词得分归一化后合并，返回 top-K 片段。
+
+配置（`.env` 或环境变量）：
+
+```powershell
+$env:AI_EMBEDDING_ENABLED="true"
+$env:AI_EMBEDDING_PROVIDER="mock"    # mock | openai
+$env:AI_EMBEDDING_MODEL="text-embedding-3-small"
+```
+
+> DeepSeek 对话 API 不提供 embedding 时，建议 `AI_EMBEDDING_PROVIDER=mock`；若使用 OpenAI embedding 接口，可设为 `openai` 并配置 `OPENAI_API_KEY`。
+
+已有数据库请执行：
+
+```sql
+SOURCE ai-knowledge-vector-migration.sql;
+```
+
+### 实时监考 WebSocket
+
+学生上报异常行为后，后端通过 STOMP 推送到 `/topic/exam/{examId}/monitor`。教师「考试监控」页自动订阅并实时更新对应学生的风险评分，同时保留 30 秒轮询作为兜底。
+
+- SockJS 端点：`/ws`
+- 订阅主题：`/topic/exam/{examId}/monitor`
+- 鉴权：CONNECT 帧携带 `Authorization: Bearer <JWT>`
+
+### E2E 自动化测试
+
+前端使用 Playwright：
+
+```bash
+cd exam-system-web
+npm install
+npx playwright install chromium
+npm run test:e2e
+```
+
+联调后端与数据库时：
+
+```bash
+E2E_WITH_BACKEND=1 npm run test:e2e
+```
 
 ### AI 一键组卷
 

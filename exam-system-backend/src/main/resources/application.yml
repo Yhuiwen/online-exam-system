@@ -59,3 +59,8 @@ ai:
     api-key: ${OPENAI_API_KEY:}
     base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
     model: ${OPENAI_MODEL:gpt-4o-mini}
+  embedding:
+    enabled: ${AI_EMBEDDING_ENABLED:true}
+    provider: ${AI_EMBEDDING_PROVIDER:mock}
+    model: ${AI_EMBEDDING_MODEL:text-embedding-3-small}
+    dimensions: ${AI_EMBEDDING_DIMENSIONS:128}

@@ -16,6 +16,7 @@ import com.exam.system.mapper.SysUserMapper;
 import com.exam.system.security.SecurityUtils;
 import com.exam.system.service.ExamViolationService;
 import com.exam.system.support.RuntimeSupport;
+import com.exam.system.monitor.ExamMonitorPublisher;
 import com.exam.system.util.ViolationRiskUtils;
 import com.exam.system.vo.ExamViolationSummaryVO;
 import com.exam.system.vo.ExamViolationVO;
@@ -48,6 +49,7 @@ public class ExamViolationServiceImpl implements ExamViolationService {
     private final RuntimeSupport runtimeSupport;
     private final ExamMapper examMapper;
     private final ExamProctorMapper examProctorMapper;
+    private final ExamMonitorPublisher examMonitorPublisher;
 
     @Override
     @Transactional
@@ -85,6 +87,8 @@ public class ExamViolationServiceImpl implements ExamViolationService {
         violation.setDescription(blankToNull(request.description()));
         violation.setCreateTime(now);
         violationMapper.insert(violation);
+        ExamViolationSummaryVO summary = summary(studentExam);
+        examMonitorPublisher.publishViolationUpdate(studentExam.getExamId(), summary);
         return toVO(violation);
     }
 

@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS course_knowledge_chunk (
   chunk_index INT NOT NULL,
   content TEXT NOT NULL,
   content_hash VARCHAR(64),
+  embedding_json TEXT NULL,
   create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_document_id(document_id),
   INDEX idx_course_id(course_id),

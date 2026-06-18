@@ -37,3 +37,7 @@ jobs:
         run: |
           npm ci
           npm run build
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+      - name: Run E2E smoke tests
+        run: npm run test:e2e

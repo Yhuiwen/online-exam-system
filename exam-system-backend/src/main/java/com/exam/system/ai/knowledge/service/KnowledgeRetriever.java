@@ -1,6 +1,9 @@
 package com.exam.system.ai.knowledge.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.exam.system.ai.config.AiProperties;
+import com.exam.system.ai.embedding.ChunkEmbeddingService;
+import com.exam.system.ai.embedding.VectorUtils;
 import com.exam.system.ai.knowledge.entity.CourseKnowledgeChunk;
 import com.exam.system.ai.knowledge.entity.CourseKnowledgeDocument;
 import com.exam.system.ai.knowledge.mapper.CourseKnowledgeChunkMapper;
@@ -24,33 +27,71 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class KnowledgeRetriever {
     private static final Pattern TERM_PATTERN = Pattern.compile("[\\p{IsHan}]{2,}|[A-Za-z0-9]{2,}");
-    private static final double MIN_SCORE = 1.5;
+    private static final double KEYWORD_MIN_SCORE = 1.5;
+    private static final double VECTOR_MIN_SCORE = 0.35;
+    private static final double KEYWORD_WEIGHT = 0.35;
+    private static final double VECTOR_WEIGHT = 0.65;
 
     private final CourseKnowledgeChunkMapper chunkMapper;
     private final CourseKnowledgeDocumentMapper documentMapper;
+    private final ChunkEmbeddingService chunkEmbeddingService;
+    private final AiProperties aiProperties;
 
     public List<ScoredChunk> retrieve(Long courseId, String question, int topK) {
-        Set<String> terms = extractTerms(question);
-        if (terms.isEmpty()) return List.of();
         List<CourseKnowledgeChunk> chunks = chunkMapper.selectList(new LambdaQueryWrapper<CourseKnowledgeChunk>()
                 .eq(CourseKnowledgeChunk::getCourseId, courseId));
         if (chunks.isEmpty()) return List.of();
+
+        Set<String> terms = extractTerms(question);
         Map<Long, CourseKnowledgeDocument> documents = documentMapper.selectBatchIds(
                         chunks.stream().map(CourseKnowledgeChunk::getDocumentId).collect(Collectors.toSet()))
                 .stream().collect(Collectors.toMap(CourseKnowledgeDocument::getId, Function.identity()));
+
+        float[] queryVector = null;
+        if (aiProperties.getEmbedding().isEnabled()) {
+            try {
+                queryVector = chunkEmbeddingService.embedText(question);
+            } catch (Exception ignored) {
+                queryVector = null;
+            }
+        }
+
+        double maxKeyword = 0;
+        double maxVector = 0;
         List<ScoredChunk> scored = new ArrayList<>();
         for (CourseKnowledgeChunk chunk : chunks) {
             CourseKnowledgeDocument document = documents.get(chunk.getDocumentId());
-            double score = score(chunk, document, terms);
-            if (score >= MIN_SCORE) scored.add(new ScoredChunk(chunk, document, score));
+            double keywordScore = terms.isEmpty() ? 0 : scoreKeyword(chunk, document, terms);
+            double vectorScore = queryVector == null ? 0 : scoreVector(chunk, queryVector);
+            maxKeyword = Math.max(maxKeyword, keywordScore);
+            maxVector = Math.max(maxVector, vectorScore);
+            scored.add(new ScoredChunk(chunk, document, keywordScore, vectorScore, 0));
         }
-        return scored.stream()
+
+        List<ScoredChunk> ranked = new ArrayList<>();
+        for (ScoredChunk item : scored) {
+            double normalizedKeyword = maxKeyword <= 0 ? 0 : item.keywordScore() / maxKeyword;
+            double normalizedVector = maxVector <= 0 ? 0 : item.vectorScore() / maxVector;
+            double hybrid = KEYWORD_WEIGHT * normalizedKeyword + VECTOR_WEIGHT * normalizedVector;
+            boolean keywordHit = item.keywordScore() >= KEYWORD_MIN_SCORE;
+            boolean vectorHit = item.vectorScore() >= VECTOR_MIN_SCORE;
+            if (!keywordHit && !vectorHit) continue;
+            ranked.add(new ScoredChunk(item.chunk(), item.document(), item.keywordScore(), item.vectorScore(), hybrid));
+        }
+
+        return ranked.stream()
                 .sorted(Comparator.comparingDouble(ScoredChunk::score).reversed())
                 .limit(Math.max(1, Math.min(topK, 8)))
                 .toList();
     }
 
-    private double score(CourseKnowledgeChunk chunk, CourseKnowledgeDocument document, Set<String> terms) {
+    private double scoreVector(CourseKnowledgeChunk chunk, float[] queryVector) {
+        float[] chunkVector = chunkEmbeddingService.embeddingOf(chunk);
+        if (chunkVector == null || chunkVector.length == 0) return 0;
+        return VectorUtils.cosineSimilarity(queryVector, chunkVector);
+    }
+
+    private double scoreKeyword(CourseKnowledgeChunk chunk, CourseKnowledgeDocument document, Set<String> terms) {
         String content = lower(chunk.getContent());
         String title = lower(document == null ? "" : document.getTitle());
         double score = 0;
@@ -101,6 +142,11 @@ public class KnowledgeRetriever {
         return value == null ? "" : value.toLowerCase(Locale.ROOT);
     }
 
-    public record ScoredChunk(CourseKnowledgeChunk chunk, CourseKnowledgeDocument document, double score) {
+    public record ScoredChunk(
+            CourseKnowledgeChunk chunk,
+            CourseKnowledgeDocument document,
+            double keywordScore,
+            double vectorScore,
+            double score) {
     }
 }

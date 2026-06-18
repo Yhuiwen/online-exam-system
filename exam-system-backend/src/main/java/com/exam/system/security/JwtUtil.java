@@ -34,4 +34,29 @@ public class JwtUtil {
     public Claims parseToken(String token) {
         return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
     }
+
+    public boolean validateToken(String token) {
+        try {
+            parseToken(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Long getUserId(String token) {
+        Object userId = parseToken(token).get("userId");
+        if (userId instanceof Integer integer) return integer.longValue();
+        if (userId instanceof Long longValue) return longValue;
+        return null;
+    }
+
+    public String getUsername(String token) {
+        return parseToken(token).getSubject();
+    }
+
+    public String getRole(String token) {
+        Object role = parseToken(token).get("role");
+        return role == null ? null : role.toString();
+    }
 }
