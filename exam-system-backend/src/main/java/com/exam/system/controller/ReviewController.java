@@ -6,6 +6,7 @@ import com.exam.system.dto.ReviewAnswerRequest;
 import com.exam.system.entity.*;
 import com.exam.system.exception.BusinessException;
 import com.exam.system.mapper.*;
+import com.exam.system.security.ExamAccessGuard;
 import com.exam.system.security.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,9 +29,11 @@ public class ReviewController {
     private final ExamMapper examMapper;
     private final ExamQuestionMapper examQuestionMapper;
     private final QuestionMapper questionMapper;
+    private final ExamAccessGuard examAccessGuard;
 
     @GetMapping("/exam/{examId}/pending")
     public Result<List<Map<String, Object>>> pending(@PathVariable Long examId) {
+        examAccessGuard.requireManageableExam(examId);
         List<StudentExam> records = studentExamMapper.selectList(new LambdaQueryWrapper<StudentExam>()
                 .eq(StudentExam::getExamId, examId)
                 .eq(StudentExam::getStatus, "PENDING_REVIEW")
@@ -55,7 +58,10 @@ public class ReviewController {
     @GetMapping("/student-exam/{studentExamId}")
     public Result<Map<String, Object>> detail(@PathVariable Long studentExamId) {
         StudentExam record = studentExamMapper.selectById(studentExamId);
-        if (record == null) throw new BusinessException("学生答卷不存在");
+        if (record == null) {
+            throw new BusinessException(404, "学生答卷不存在");
+        }
+        examAccessGuard.requireManageableExam(record.getExamId());
         Exam exam = examMapper.selectById(record.getExamId());
         SysUser student = userMapper.selectById(record.getStudentId());
         List<StudentAnswer> answers = studentAnswerMapper.selectList(new LambdaQueryWrapper<StudentAnswer>()
@@ -97,10 +103,15 @@ public class ReviewController {
     public Result<Map<String, Object>> review(@PathVariable Long answerId,
                                                @Valid @RequestBody ReviewAnswerRequest request) {
         StudentAnswer answer = studentAnswerMapper.selectById(answerId);
-        if (answer == null) throw new BusinessException("学生答案不存在");
+        if (answer == null) {
+            throw new BusinessException(404, "学生答案不存在");
+        }
         StudentExam record = studentExamMapper.selectById(answer.getStudentExamId());
         Question question = questionMapper.selectById(answer.getQuestionId());
-        if (record == null || question == null) throw new BusinessException("答卷数据不完整");
+        if (record == null || question == null) {
+            throw new BusinessException(404, "答卷数据不完整");
+        }
+        examAccessGuard.requireManageableExam(record.getExamId());
         if (!"SHORT_ANSWER".equals(question.getQuestionType())) throw new BusinessException("只能人工批改简答题");
         ExamQuestion relation = examQuestionMapper.selectOne(new LambdaQueryWrapper<ExamQuestion>()
                 .eq(ExamQuestion::getExamId, record.getExamId())

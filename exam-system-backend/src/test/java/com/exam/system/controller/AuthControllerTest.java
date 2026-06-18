@@ -102,9 +102,40 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new LoginRequest("teacher", "123456"))))
-                .andExpect(status().isOk())
+                .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value(403))
                 .andExpect(jsonPath("$.message").value("账号状态异常，请联系管理员"));
+    }
+
+    @Test
+    void loginReturnsUnauthorizedForInvalidCredentials() throws Exception {
+        when(userMapper.selectOne(any())).thenReturn(null);
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest("unknown", "wrong"))))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401))
+                .andExpect(jsonPath("$.message").value("用户名或密码错误"));
+    }
+
+    @Test
+    void loginReturnsForbiddenForDisabledUser() throws Exception {
+        SysUser user = new SysUser();
+        user.setId(1L);
+        user.setUsername("teacher");
+        user.setPassword("encoded");
+        user.setRole("TEACHER");
+        user.setStatus(0);
+        when(userMapper.selectOne(any())).thenReturn(user);
+        when(passwordEncoder.matches("123456", "encoded")).thenReturn(true);
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest("teacher", "123456"))))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403))
+                .andExpect(jsonPath("$.message").value("账号已被禁用"));
     }
 
     @Test

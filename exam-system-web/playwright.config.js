@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
+const browserChannel = process.env.E2E_BROWSER_CHANNEL
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -12,7 +14,13 @@ export default defineConfig({
     trace: 'on-first-retry'
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } }
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        ...(browserChannel ? { channel: browserChannel } : {})
+      }
+    }
   ],
   webServer: process.env.E2E_SKIP_WEB_SERVER
     ? undefined

@@ -6,6 +6,7 @@ import com.exam.system.dto.AutoPaperRequest;
 import com.exam.system.entity.*;
 import com.exam.system.exception.BusinessException;
 import com.exam.system.mapper.*;
+import com.exam.system.security.ExamAccessGuard;
 import com.exam.system.security.SecurityUtils;
 import com.exam.system.service.ExamService;
 import com.exam.system.vo.ExamVO;
@@ -31,6 +32,7 @@ public class ExamServiceImpl implements ExamService {
     private final ExamViolationMapper examViolationMapper;
     private final WrongQuestionMapper wrongQuestionMapper;
     private final SysUserMapper userMapper;
+    private final ExamAccessGuard examAccessGuard;
 
     @Override
     public List<ExamVO> listExams() {
@@ -65,20 +67,96 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
+    public Exam createExam(Exam exam) {
+        if (exam.getExamName() == null || exam.getExamName().isBlank()) {
+            throw new BusinessException("考试名称不能为空");
+        }
+        if (exam.getCourseId() == null) {
+            throw new BusinessException("请选择课程");
+        }
+        exam.setTeacherId(SecurityUtils.userId());
+        exam.setStatus("DRAFT");
+        if (exam.getTotalScore() == null) {
+            exam.setTotalScore(BigDecimal.ZERO);
+        }
+        examMapper.insert(exam);
+        return exam;
+    }
+
+    @Override
     public ExamVO getExamVO(Long examId) {
-        Exam exam = examMapper.selectById(examId);
-        if (exam == null) throw new BusinessException("考试不存在");
-        checkStudentAccess(exam);
+        Exam exam = examAccessGuard.requireViewableExam(examId);
         return toExamView(exam);
     }
 
     @Override
     @Transactional
+    public void updateExam(Long examId, Exam patch) {
+        Exam exam = examAccessGuard.requireManageableExam(examId);
+        if (patch.getExamName() != null) {
+            exam.setExamName(patch.getExamName());
+        }
+        if (patch.getCourseId() != null) {
+            exam.setCourseId(patch.getCourseId());
+        }
+        if (patch.getStartTime() != null) {
+            exam.setStartTime(patch.getStartTime());
+        }
+        if (patch.getEndTime() != null) {
+            exam.setEndTime(patch.getEndTime());
+        }
+        if (patch.getDurationMinutes() != null) {
+            exam.setDurationMinutes(patch.getDurationMinutes());
+        }
+        examMapper.updateById(exam);
+    }
+
+    @Override
+    @Transactional
+    public void updateStatus(Long examId, String status) {
+        Exam exam = examAccessGuard.requireManageableExam(examId);
+        exam.setStatus(status);
+        examMapper.updateById(exam);
+    }
+
+    @Override
+    @Transactional
+    public void addQuestion(Long examId, Long questionId) {
+        Exam exam = examAccessGuard.requireManageableExam(examId);
+        if (!"DRAFT".equals(exam.getStatus())) {
+            throw new BusinessException("考试已发布，禁止修改试卷");
+        }
+        if (examQuestionMapper.selectCount(new LambdaQueryWrapper<ExamQuestion>()
+                .eq(ExamQuestion::getExamId, examId).eq(ExamQuestion::getQuestionId, questionId)) > 0) {
+            throw new BusinessException("题目已在试卷中");
+        }
+        Question question = questionMapper.selectById(questionId);
+        if (question == null) {
+            throw new BusinessException("题目不存在");
+        }
+        if (!exam.getCourseId().equals(question.getCourseId())) {
+            throw new BusinessException("题目不属于当前考试课程");
+        }
+        long count = examQuestionMapper.selectCount(new LambdaQueryWrapper<ExamQuestion>().eq(ExamQuestion::getExamId, examId));
+        ExamQuestion relation = new ExamQuestion();
+        relation.setExamId(examId);
+        relation.setQuestionId(questionId);
+        relation.setSortNo((int) count + 1);
+        relation.setScore(question.getScore());
+        examQuestionMapper.insert(relation);
+        recalculateTotalScore(examId);
+    }
+
+    @Override
+    @Transactional
     public List<Question> autoPaper(Long examId, AutoPaperRequest r) {
-        Exam exam = examMapper.selectById(examId);
-        if (exam == null) throw new BusinessException("考试不存在");
-        if (!"DRAFT".equals(exam.getStatus())) throw new BusinessException("考试已发布，禁止修改试卷");
-        if (!exam.getCourseId().equals(r.courseId())) throw new BusinessException("组卷课程与考试课程不一致");
+        Exam exam = examAccessGuard.requireManageableExam(examId);
+        if (!"DRAFT".equals(exam.getStatus())) {
+            throw new BusinessException("考试已发布，禁止修改试卷");
+        }
+        if (!exam.getCourseId().equals(r.courseId())) {
+            throw new BusinessException("组卷课程与考试课程不一致");
+        }
         double ratio = r.easyRatio() + r.mediumRatio() + r.hardRatio();
         if (Math.abs(ratio - 1.0) > 0.001 && Math.abs(ratio - 100.0) > 0.001) {
             throw new BusinessException("难度比例之和必须为 1 或 100");
@@ -96,7 +174,9 @@ public class ExamServiceImpl implements ExamService {
             int total = entry.getValue();
             int easy = (int) Math.round(total * r.easyRatio() / scale);
             int medium = (int) Math.round(total * r.mediumRatio() / scale);
-            if (easy + medium > total) medium = total - easy;
+            if (easy + medium > total) {
+                medium = total - easy;
+            }
             int hard = total - easy - medium;
             select(selected, r.courseId(), entry.getKey(), "EASY", easy, random);
             select(selected, r.courseId(), entry.getKey(), "MEDIUM", medium, random);
@@ -120,18 +200,21 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
-    public List<Question> questions(Long examId, boolean includeAnswers) {
-        List<ExamQuestion> relations = examQuestionMapper.selectList(new LambdaQueryWrapper<ExamQuestion>()
-                .eq(ExamQuestion::getExamId, examId).orderByAsc(ExamQuestion::getSortNo));
-        List<Question> questions = relations.stream().map(x -> questionMapper.selectById(x.getQuestionId())).toList();
-        if (!includeAnswers) questions.forEach(q -> { q.setAnswer(null); q.setAnalysis(null); });
-        return questions;
+    public List<Question> questions(Long examId) {
+        String role = SecurityUtils.current().getUser().getRole();
+        if ("STUDENT".equals(role)) {
+            examAccessGuard.requireViewableExam(examId);
+        } else {
+            examAccessGuard.requireViewableExamWithAnswers(examId);
+        }
+        boolean includeAnswers = !"STUDENT".equals(role);
+        return loadQuestions(examId, includeAnswers);
     }
 
     @Override
     @Transactional
     public void deleteExam(Long examId) {
-        Exam exam = requireManageableExam(examId);
+        Exam exam = examAccessGuard.requireManageableExam(examId);
         if ("PUBLISHED".equals(exam.getStatus())) {
             throw new BusinessException("已发布考试请先关闭后再删除");
         }
@@ -163,8 +246,7 @@ public class ExamServiceImpl implements ExamService {
         if (!"ADMIN".equals(SecurityUtils.current().getUser().getRole())) {
             throw new BusinessException(403, "仅管理员可分配监考教师");
         }
-        Exam exam = examMapper.selectById(examId);
-        if (exam == null) throw new BusinessException("考试不存在");
+        examAccessGuard.requireExistingExam(examId);
         List<Long> teacherIds = request.teacherIds().stream().distinct().toList();
         long validTeacherCount = userMapper.selectCount(new LambdaQueryWrapper<SysUser>()
                 .in(SysUser::getId, teacherIds)
@@ -183,8 +265,23 @@ public class ExamServiceImpl implements ExamService {
         }
     }
 
+    private List<Question> loadQuestions(Long examId, boolean includeAnswers) {
+        List<ExamQuestion> relations = examQuestionMapper.selectList(new LambdaQueryWrapper<ExamQuestion>()
+                .eq(ExamQuestion::getExamId, examId).orderByAsc(ExamQuestion::getSortNo));
+        List<Question> questions = relations.stream().map(x -> questionMapper.selectById(x.getQuestionId())).toList();
+        if (!includeAnswers) {
+            questions.forEach(q -> {
+                q.setAnswer(null);
+                q.setAnalysis(null);
+            });
+        }
+        return questions;
+    }
+
     private void select(List<Question> selected, Long courseId, String type, String difficulty, int count, Random random) {
-        if (count == 0) return;
+        if (count == 0) {
+            return;
+        }
         List<Question> pool = questionMapper.selectList(new LambdaQueryWrapper<Question>()
                 .eq(Question::getCourseId, courseId).eq(Question::getQuestionType, type)
                 .eq(Question::getDifficulty, difficulty));
@@ -195,8 +292,18 @@ public class ExamServiceImpl implements ExamService {
         selected.addAll(pool.subList(0, count));
     }
 
+    private void recalculateTotalScore(Long examId) {
+        BigDecimal total = examQuestionMapper.selectList(new LambdaQueryWrapper<ExamQuestion>().eq(ExamQuestion::getExamId, examId))
+                .stream().map(ExamQuestion::getScore).reduce(BigDecimal.ZERO, BigDecimal::add);
+        Exam exam = examMapper.selectById(examId);
+        exam.setTotalScore(total);
+        examMapper.updateById(exam);
+    }
+
     private List<ExamVO> toExamViews(List<Exam> exams) {
-        if (exams.isEmpty()) return List.of();
+        if (exams.isEmpty()) {
+            return List.of();
+        }
         List<Long> examIds = exams.stream().map(Exam::getId).toList();
         List<Long> teacherIds = exams.stream().map(Exam::getTeacherId).distinct().toList();
         Map<Long, String> teacherNames = userMapper.selectList(new LambdaQueryWrapper<SysUser>()
@@ -233,21 +340,5 @@ public class ExamServiceImpl implements ExamService {
 
     private ExamVO toExamView(Exam exam) {
         return toExamViews(List.of(exam)).get(0);
-    }
-
-    private Exam requireManageableExam(Long examId) {
-        Exam exam = examMapper.selectById(examId);
-        if (exam == null) throw new BusinessException("考试不存在");
-        String role = SecurityUtils.current().getUser().getRole();
-        if ("TEACHER".equals(role) && !SecurityUtils.userId().equals(exam.getTeacherId())) {
-            throw new BusinessException(403, "只能管理自己创建的考试");
-        }
-        return exam;
-    }
-
-    private void checkStudentAccess(Exam exam) {
-        if ("STUDENT".equals(SecurityUtils.current().getUser().getRole()) && !"PUBLISHED".equals(exam.getStatus())) {
-            throw new BusinessException(403, "该考试尚未发布");
-        }
     }
 }

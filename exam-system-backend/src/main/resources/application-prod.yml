@@ -1,0 +1,6 @@
+# 生产环境 profile：配合 JWT_SECRET 强校验与受限 CORS 使用
+# 启动示例：SPRING_PROFILES_ACTIVE=prod JWT_SECRET=<至少32位随机字符串>
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}

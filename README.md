@@ -104,17 +104,48 @@
 
 ### 工程化
 
-- Docker Compose 一键启动 MySQL + Redis + 后端 + 前端
-- Springdoc Swagger 与 Knife4j 接口文档
-- GitHub Actions CI（后端测试 + 前端构建）
-- 单元测试覆盖防作弊评分、AI 出题等核心逻辑
+- Docker Compose 启动 MySQL、Redis、后端与前端（本地开发也可只启数据库容器）
+- Springdoc Swagger 与 Knife4j 接口文档（`/doc.html`）
+- GitHub Actions CI（后端 `mvn test` + 前端 `npm run build`）
+- 单元测试覆盖登录鉴权、考试权限、组卷、防作弊评分、RAG 等核心逻辑
+
+## 项目优化说明
+
+近期工程化优化重点：
+
+- **教师权限边界**：考试创建者（`teacherId`）才可修改/组卷/发布；管理员可管理全部；监考教师仅可查看监控数据
+- **CORS 配置**：通过 `app.cors.allowed-origins` / 环境变量 `CORS_ALLOWED_ORIGINS` 限制来源，不再默认 `*`
+- **JWT 生产校验**：启用 `prod` profile 时，弱/默认 `JWT_SECRET` 将导致启动失败
+- **统一异常状态码**：业务异常返回对应 HTTP 状态码；未知异常不向客户端暴露内部信息
+- **核心测试**：补充考试越权、监考权限边界、学生题目脱敏、登录状态码、Review/Statistics 权限等用例
+
+## 核心代码位置
+
+| 模块 | 主要文件 |
+| --- | --- |
+| JWT 鉴权 | `security/JwtUtil.java`、`security/JwtAuthenticationFilter.java` |
+| 权限控制 | `config/SecurityConfig.java`、`security/ExamAccessGuard.java`、`service/impl/ExamServiceImpl.java` |
+| 考试管理 | `controller/ExamController.java`、`service/impl/ExamServiceImpl.java`、`service/impl/PaperServiceImpl.java` |
+| 批改与统计 | `controller/ReviewController.java`、`controller/StatisticsController.java` |
+| 防作弊监控 | `controller/ExamViolationController.java`、`service/impl/ExamViolationServiceImpl.java`、`monitor/ExamMonitorPublisher.java` |
+| RAG 知识库 | `ai/knowledge/` 模块（文档上传、分片、检索、答疑） |
+| 全局异常 | `exception/GlobalExceptionHandler.java` |
+| CORS / JWT 校验 | `config/CorsConfig.java`、`config/JwtSecretValidator.java` |
+
+## 部署注意事项
+
+- 修改演示账号默认密码，不要使用 `123456` 上线
+- 生产环境必须设置足够长度的随机 `JWT_SECRET`（启用 `prod` profile 时会校验）
+- 通过 `CORS_ALLOWED_ORIGINS` 限制前端域名，不要使用 `*`
+- 生产环境不要将 MySQL（3306）、Redis（6379）端口暴露到公网
+- 不要将 `.env`、真实 API Key 或数据库密码提交到 Git 仓库
 
 ## 系统角色
 
 | 角色 | 主要权限 |
 | --- | --- |
 | 管理员 | 用户管理、课程管理、考试管理、试卷预览、考试监控和统计分析 |
-| 教师 | 课程管理、题库管理、自动组卷、手动组卷、考试管理、人工批改、考试监控和统计分析 |
+| 教师 | 课程管理、题库管理、自动/手动组卷、**仅管理自己创建的考试**、人工批改、考试监控和统计分析 |
 | 学生 | 参加考试、在线答题、成绩查询、错题查看和个人统计 |
 
 ## 项目结构
@@ -610,6 +641,29 @@ npm run test:e2e
 ```bash
 E2E_WITH_BACKEND=1 npm run test:e2e
 ```
+
+**Windows 下 Chromium 下载失败时**
+
+若 `npx playwright install chromium` 因网络超时失败，可改用本机已安装的浏览器（无需下载 Playwright 自带 Chromium）：
+
+```powershell
+# 使用本机 Google Chrome
+$env:E2E_BROWSER_CHANNEL="chrome"
+npm run test:e2e
+
+# 或使用本机 Microsoft Edge
+$env:E2E_BROWSER_CHANNEL="msedge"
+npm run test:e2e
+```
+
+仍想安装 Playwright Chromium 时，可通过代理下载（将地址替换为你的代理）：
+
+```powershell
+$env:HTTPS_PROXY="http://127.0.0.1:7897"
+npx playwright install chromium
+```
+
+未设置 `E2E_BROWSER_CHANNEL` 时，默认使用 Playwright 自带 Chromium；CI 环境仍按此方式安装并运行。
 
 ### AI 一键组卷
 

@@ -14,6 +14,7 @@ import com.exam.system.mapper.CourseMapper;
 import com.exam.system.mapper.ExamMapper;
 import com.exam.system.mapper.ExamQuestionMapper;
 import com.exam.system.mapper.QuestionMapper;
+import com.exam.system.security.ExamAccessGuard;
 import com.exam.system.service.PaperService;
 import com.exam.system.util.QuestionSourceValidator;
 import com.exam.system.vo.ManualQuestionVO;
@@ -41,11 +42,12 @@ public class PaperServiceImpl implements PaperService {
     private final ExamQuestionMapper examQuestionMapper;
     private final QuestionMapper questionMapper;
     private final CourseMapper courseMapper;
+    private final ExamAccessGuard examAccessGuard;
 
     @Override
     public List<ManualQuestionVO> selectableQuestions(Long examId, String questionType, String difficulty,
                                                        String keyword, String knowledgeTag, String sourceCategory) {
-        Exam exam = requireExam(examId);
+        Exam exam = examAccessGuard.requireViewableExamWithAnswers(examId);
         LambdaQueryWrapper<Question> query = new LambdaQueryWrapper<Question>()
                 .eq(Question::getCourseId, exam.getCourseId())
                 .eq(hasText(questionType), Question::getQuestionType, trim(questionType))
@@ -105,7 +107,8 @@ public class PaperServiceImpl implements PaperService {
 
     @Override
     public PaperPreviewVO preview(Long examId) {
-        Exam exam = requireExam(examId);
+        examAccessGuard.requireViewableExamWithAnswers(examId);
+        Exam exam = examMapper.selectById(examId);
         Course course = courseMapper.selectById(exam.getCourseId());
         List<ExamQuestion> relations = examQuestionMapper.selectList(
                 new LambdaQueryWrapper<ExamQuestion>()
@@ -203,14 +206,8 @@ public class PaperServiceImpl implements PaperService {
                 Question::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
     }
 
-    private Exam requireExam(Long examId) {
-        Exam exam = examMapper.selectById(examId);
-        if (exam == null) throw new BusinessException("考试不存在");
-        return exam;
-    }
-
     private Exam requireEditableExam(Long examId) {
-        Exam exam = requireExam(examId);
+        Exam exam = examAccessGuard.requireManageableExam(examId);
         if (!"DRAFT".equals(exam.getStatus())) {
             throw new BusinessException("考试已发布，禁止修改试卷");
         }

@@ -13,6 +13,7 @@ import com.exam.system.mapper.ExamMapper;
 import com.exam.system.mapper.ExamProctorMapper;
 import com.exam.system.mapper.StudentExamMapper;
 import com.exam.system.mapper.SysUserMapper;
+import com.exam.system.security.ExamAccessGuard;
 import com.exam.system.security.SecurityUtils;
 import com.exam.system.service.ExamViolationService;
 import com.exam.system.support.RuntimeSupport;
@@ -50,6 +51,7 @@ public class ExamViolationServiceImpl implements ExamViolationService {
     private final ExamMapper examMapper;
     private final ExamProctorMapper examProctorMapper;
     private final ExamMonitorPublisher examMonitorPublisher;
+    private final ExamAccessGuard examAccessGuard;
 
     @Override
     @Transactional
@@ -174,17 +176,7 @@ public class ExamViolationServiceImpl implements ExamViolationService {
     }
 
     private void ensureMonitorAccess(Long examId) {
-        String role = SecurityUtils.current().getUser().getRole();
-        if ("ADMIN".equals(role)) return;
-        Exam exam = examMapper.selectById(examId);
-        if (exam == null) throw new BusinessException("考试不存在");
-        if (SecurityUtils.userId().equals(exam.getTeacherId())) return;
-        long proctorCount = examProctorMapper.selectCount(new LambdaQueryWrapper<ExamProctor>()
-                .eq(ExamProctor::getExamId, examId)
-                .eq(ExamProctor::getTeacherId, SecurityUtils.userId()));
-        if (proctorCount == 0) {
-            throw new BusinessException(403, "无权查看该考试监控数据");
-        }
+        examAccessGuard.requireMonitorableExam(examId);
     }
 
     private ExamViolationVO toVO(ExamViolation violation) {

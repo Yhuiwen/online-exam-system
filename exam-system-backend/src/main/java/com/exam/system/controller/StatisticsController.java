@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.exam.system.common.Result;
 import com.exam.system.entity.*;
 import com.exam.system.mapper.*;
+import com.exam.system.security.ExamAccessGuard;
 import com.exam.system.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,10 +24,12 @@ public class StatisticsController {
     private final QuestionMapper questionMapper;
     private final WrongQuestionMapper wrongMapper;
     private final ExamMapper examMapper;
+    private final ExamAccessGuard examAccessGuard;
 
     @GetMapping("/exam/{examId}")
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
     public Result<Map<String, Object>> exam(@PathVariable Long examId) {
+        examAccessGuard.requireManageableExam(examId);
         List<StudentExam> records = studentExamMapper.selectList(new LambdaQueryWrapper<StudentExam>()
                 .eq(StudentExam::getExamId, examId).eq(StudentExam::getStatus, "SUBMITTED"));
         DoubleSummaryStatistics scores = records.stream().map(StudentExam::getTotalScore)

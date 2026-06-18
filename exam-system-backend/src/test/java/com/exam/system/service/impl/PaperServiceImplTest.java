@@ -13,6 +13,7 @@ import com.exam.system.mapper.CourseMapper;
 import com.exam.system.mapper.ExamMapper;
 import com.exam.system.mapper.ExamQuestionMapper;
 import com.exam.system.mapper.QuestionMapper;
+import com.exam.system.security.ExamAccessGuard;
 import com.exam.system.vo.PaperPreviewVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,6 +43,8 @@ class PaperServiceImplTest {
     @Mock private QuestionMapper questionMapper;
     @Mock private CourseMapper courseMapper;
 
+    @Mock private ExamAccessGuard examAccessGuard;
+
     private PaperServiceImpl service;
     private Exam exam;
     private List<Question> questions;
@@ -49,7 +52,7 @@ class PaperServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new PaperServiceImpl(examMapper, examQuestionMapper, questionMapper, courseMapper);
+        service = new PaperServiceImpl(examMapper, examQuestionMapper, questionMapper, courseMapper, examAccessGuard);
         exam = new Exam();
         exam.setId(100L);
         exam.setExamName("手动组卷测试");
@@ -71,6 +74,8 @@ class PaperServiceImplTest {
         relations = new ArrayList<>();
 
         lenient().when(examMapper.selectById(100L)).thenReturn(exam);
+        lenient().when(examAccessGuard.requireManageableExam(100L)).thenReturn(exam);
+        lenient().when(examAccessGuard.requireViewableExamWithAnswers(100L)).thenReturn(exam);
         lenient().when(courseMapper.selectById(1L)).thenReturn(course);
         lenient().when(questionMapper.selectBatchIds(anyList())).thenAnswer(invocation -> {
             List<?> ids = invocation.getArgument(0);
