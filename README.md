@@ -378,3 +378,59 @@ npm run build
 ## License
 
 本项目主要用于课程学习、技术交流和个人项目展示。
+
+## AI 出题功能
+
+教师端题库管理页新增“AI 出题”入口。教师选择课程、题型、难度、知识点、生成数量、每题分值和额外要求后，可以先生成题目预览；预览中的题干、选项、答案、解析、难度、分值和知识点均可编辑。AI 生成内容不会直接入库，必须由教师确认后点击“保存入题库”才会批量写入现有 `question` 表。
+
+### 接口说明
+
+- `POST /api/ai/questions/generate`：生成题目预览，不入库。
+- `POST /api/ai/questions/save`：保存教师确认后的 AI 题目到题库。
+
+两个接口均要求登录，并且只允许 `ADMIN`、`TEACHER` 访问，`STUDENT` 访问会返回 403。
+
+### Mock 模式
+
+默认配置为 mock 模式，无需大模型 API Key 即可演示完整前后端流程：
+
+```yaml
+ai:
+  provider: mock
+```
+
+也可以通过环境变量指定：
+
+```powershell
+$env:AI_PROVIDER="mock"
+```
+
+### 配置真实大模型
+
+后端支持 OpenAI 兼容接口，API Key 不写入代码，优先从环境变量读取：
+
+```powershell
+$env:AI_PROVIDER="openai"
+$env:OPENAI_API_KEY="你的 API Key"
+$env:OPENAI_MODEL="gpt-4o-mini"
+$env:OPENAI_BASE_URL="https://api.openai.com/v1"
+```
+
+`application.yml` 中的默认配置如下，没有 Key 或 provider 不是 `openai` 时会自动使用 Mock：
+
+```yaml
+ai:
+  provider: ${AI_PROVIDER:mock}
+  openai:
+    api-key: ${OPENAI_API_KEY:}
+    base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+    model: ${OPENAI_MODEL:gpt-4o-mini}
+```
+
+### 教师端使用流程
+
+1. 使用教师或管理员账号登录。
+2. 进入“题库管理”，点击“AI 出题”。
+3. 填写课程、题型、难度、知识点、数量、分值和额外要求。
+4. 点击“生成题目”，检查并编辑预览列表。
+5. 删除不需要的题目，确认无误后点击“保存入题库”。

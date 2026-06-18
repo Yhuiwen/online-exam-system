@@ -1,6 +1,7 @@
 package com.exam.system.exception;
 
 import com.exam.system.common.Result;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
@@ -21,6 +22,11 @@ public class GlobalExceptionHandler {
                 ? ex.getBindingResult().getAllErrors().get(0).getDefaultMessage()
                 : ((BindException) e).getBindingResult().getAllErrors().get(0).getDefaultMessage();
         return Result.error(400, message);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public Result<Void> handleUnreadableBody(HttpMessageNotReadableException e) {
+        return Result.error(400, "请求体不能为空或 JSON 格式不合法");
     }
 
     @ExceptionHandler(AccessDeniedException.class)

@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import {
   createQuestion,
@@ -9,9 +9,11 @@ import {
   importQuestions,
   updateQuestion
 } from '../api/question'
+import { generateAiQuestions, saveAiQuestions } from '../api/aiQuestion'
 import { getCourses } from '../api/course'
+import { useAuthStore } from '../store/auth'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Download, Upload } from '@element-plus/icons-vue'
+import { Delete, Download, MagicStick, Upload } from '@element-plus/icons-vue'
 import {
   examScopeOptions,
   formatDifficulty,
@@ -23,6 +25,7 @@ import {
 } from '../utils/enumMap'
 
 const rows = ref([])
+const authStore = useAuthStore()
 const courses = ref([])
 const total = ref(0)
 const visible = ref(false)
@@ -31,6 +34,10 @@ const importVisible = ref(false)
 const importFile = ref(null)
 const importResult = ref(null)
 const importing = ref(false)
+const aiVisible = ref(false)
+const aiGenerating = ref(false)
+const aiSaving = ref(false)
+const aiPreviewRows = ref([])
 const query = reactive({
   page: 1,
   size: 10,
@@ -60,7 +67,17 @@ const form = reactive({
   paperType: '',
   sourceRef: ''
 })
+const aiForm = reactive({
+  courseId: null,
+  questionType: 'SINGLE_CHOICE',
+  difficulty: 'EASY',
+  knowledgePoint: '',
+  count: 5,
+  score: 5,
+  requirement: ''
+})
 const choice = computed(() => ['SINGLE_CHOICE', 'MULTIPLE_CHOICE'].includes(form.questionType))
+const canUseAi = computed(() => ['ADMIN', 'TEACHER'].includes(authStore.user?.role))
 const isRealExam = computed(() => form.sourceCategory === 'REAL_EXAM')
 const isMockExam = computed(() => form.sourceCategory === 'MOCK_EXAM')
 const isSelfAuthored = computed(() => form.sourceCategory === 'SELF_AUTHORED')
@@ -97,6 +114,18 @@ function defaultForm() {
   }
 }
 
+function defaultAiForm() {
+  return {
+    courseId: query.courseId || courses.value[0]?.id,
+    questionType: 'SINGLE_CHOICE',
+    difficulty: 'EASY',
+    knowledgePoint: '',
+    count: 5,
+    score: 5,
+    requirement: ''
+  }
+}
+
 async function load() {
   const data = await getQuestions({
     ...query,
@@ -128,6 +157,69 @@ function open(row) {
       }
     : defaultForm())
   visible.value = true
+}
+
+function openAiDialog() {
+  Object.assign(aiForm, defaultAiForm())
+  aiPreviewRows.value = []
+  aiVisible.value = true
+}
+
+function resetAiDialog() {
+  aiGenerating.value = false
+  aiSaving.value = false
+  aiPreviewRows.value = []
+  Object.assign(aiForm, defaultAiForm())
+}
+
+function isAiChoice(row) {
+  return ['SINGLE_CHOICE', 'MULTIPLE_CHOICE'].includes(row.questionType)
+}
+
+function validateAiForm() {
+  if (!aiForm.courseId) return 'Please select a course'
+  if (!aiForm.questionType) return 'Please select a question type'
+  if (!aiForm.difficulty) return 'Please select a difficulty'
+  if (!aiForm.count || aiForm.count < 1 || aiForm.count > 20) return 'Count must be between 1 and 20'
+  if (!aiForm.score || aiForm.score <= 0) return 'Score must be greater than 0'
+  return ''
+}
+
+async function generateAi() {
+  const message = validateAiForm()
+  if (message) return ElMessage.warning(message)
+  aiGenerating.value = true
+  try {
+    aiPreviewRows.value = await generateAiQuestions({ ...aiForm })
+    if (!aiPreviewRows.value.length) ElMessage.warning('AI returned no questions')
+  } catch (error) {
+    ElMessage.error(error?.message || 'Failed to generate AI questions')
+  } finally {
+    aiGenerating.value = false
+  }
+}
+
+function removeAiRow(index) {
+  aiPreviewRows.value.splice(index, 1)
+}
+
+async function saveAiPreview() {
+  if (!aiForm.courseId) return ElMessage.warning('Please select a course')
+  if (!aiPreviewRows.value.length) return ElMessage.warning('Please generate questions first')
+  aiSaving.value = true
+  try {
+    await saveAiQuestions({
+      courseId: aiForm.courseId,
+      questions: aiPreviewRows.value
+    })
+    ElMessage.success('AI questions saved')
+    aiVisible.value = false
+    await load()
+  } catch (error) {
+    ElMessage.error(error?.message || 'Failed to save AI questions')
+  } finally {
+    aiSaving.value = false
+  }
 }
 
 function resetSourceFields() {
@@ -236,6 +328,7 @@ onMounted(async () => {
         <el-button :icon="Download" @click="downloadTemplate">下载导入模板</el-button>
         <el-button :icon="Upload" @click="openImport">导入题库</el-button>
         <el-button :icon="Download" @click="exportBank">导出题库</el-button>
+        <el-button v-if="canUseAi" type="success" :icon="MagicStick" @click="openAiDialog">AI 出题</el-button>
         <el-button type="primary" @click="open()">新增题目</el-button>
       </div>
     </div>
@@ -337,6 +430,108 @@ onMounted(async () => {
       </template>
     </el-dialog>
 
+    <el-dialog v-model="aiVisible" title="AI 出题" width="95%" top="4vh" class="ai-question-dialog" @closed="resetAiDialog">
+      <el-form :model="aiForm" label-width="96">
+        <div class="ai-form-grid">
+          <el-form-item label="课程" required>
+            <el-select v-model="aiForm.courseId" placeholder="选择课程" style="width: 100%">
+              <el-option v-for="course in courses" :key="course.id" :label="course.courseName" :value="course.id" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="题型" required>
+            <el-select v-model="aiForm.questionType" style="width: 100%">
+              <el-option v-for="type in types" :key="type[0]" :label="type[1]" :value="type[0]" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="难度" required>
+            <el-select v-model="aiForm.difficulty" style="width: 100%">
+              <el-option label="简单" value="EASY" />
+              <el-option label="中等" value="MEDIUM" />
+              <el-option label="困难" value="HARD" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="知识点">
+            <el-input v-model="aiForm.knowledgePoint" placeholder="如 Spring MVC" />
+          </el-form-item>
+          <el-form-item label="生成数量" required>
+            <el-input-number v-model="aiForm.count" :min="1" :max="20" />
+          </el-form-item>
+          <el-form-item label="每题分值" required>
+            <el-input-number v-model="aiForm.score" :min="1" />
+          </el-form-item>
+        </div>
+        <el-form-item label="额外要求">
+          <el-input
+            v-model="aiForm.requirement"
+            type="textarea"
+            :rows="2"
+            placeholder="可补充考查范围、题目风格、避免内容等"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" :icon="MagicStick" :loading="aiGenerating" @click="generateAi">生成题目</el-button>
+        </el-form-item>
+      </el-form>
+
+      <el-table v-if="aiPreviewRows.length" :data="aiPreviewRows" border class="ai-preview-table" max-height="520">
+        <el-table-column label="题型" width="150">
+          <template #default="{ row }">
+            <el-select v-model="row.questionType">
+              <el-option v-for="type in types" :key="type[0]" :label="type[1]" :value="type[0]" />
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column label="题干" min-width="260">
+          <template #default="{ row }"><el-input v-model="row.content" type="textarea" :rows="2" /></template>
+        </el-table-column>
+        <el-table-column label="选项A" min-width="180">
+          <template #default="{ row }"><el-input v-if="isAiChoice(row)" v-model="row.optionA" /></template>
+        </el-table-column>
+        <el-table-column label="选项B" min-width="180">
+          <template #default="{ row }"><el-input v-if="isAiChoice(row)" v-model="row.optionB" /></template>
+        </el-table-column>
+        <el-table-column label="选项C" min-width="180">
+          <template #default="{ row }"><el-input v-if="isAiChoice(row)" v-model="row.optionC" /></template>
+        </el-table-column>
+        <el-table-column label="选项D" min-width="180">
+          <template #default="{ row }"><el-input v-if="isAiChoice(row)" v-model="row.optionD" /></template>
+        </el-table-column>
+        <el-table-column label="答案" width="150">
+          <template #default="{ row }"><el-input v-model="row.correctAnswer" /></template>
+        </el-table-column>
+        <el-table-column label="解析" min-width="260">
+          <template #default="{ row }"><el-input v-model="row.analysis" type="textarea" :rows="2" /></template>
+        </el-table-column>
+        <el-table-column label="难度" width="130">
+          <template #default="{ row }">
+            <el-select v-model="row.difficulty">
+              <el-option label="简单" value="EASY" />
+              <el-option label="中等" value="MEDIUM" />
+              <el-option label="困难" value="HARD" />
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column label="分值" width="120">
+          <template #default="{ row }"><el-input-number v-model="row.score" :min="1" controls-position="right" /></template>
+        </el-table-column>
+        <el-table-column label="知识点" min-width="160">
+          <template #default="{ row }"><el-input v-model="row.knowledgePoint" /></template>
+        </el-table-column>
+        <el-table-column label="操作" width="80" fixed="right">
+          <template #default="{ $index }">
+            <el-button link type="danger" :icon="Delete" @click="removeAiRow($index)" />
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <template #footer>
+        <el-button @click="aiVisible = false">取消</el-button>
+        <el-button type="primary" :loading="aiSaving" :disabled="!aiPreviewRows.length" @click="saveAiPreview">
+          保存入题库
+        </el-button>
+      </template>
+    </el-dialog>
+
     <el-dialog v-model="visible" :title="editing ? '编辑题目' : '新增题目'" width="760">
       <el-form label-width="96">
         <el-form-item label="课程">
@@ -422,4 +617,12 @@ onMounted(async () => {
 .import-summary { margin: 16px 0; }
 .import-tip { margin: 12px 0 0; color: #64748b; font-size: 13px; line-height: 1.6; }
 .field-tip { margin-left: 10px; color: #94a3b8; font-size: 12px; }
+.ai-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  column-gap: 16px;
+}
+.ai-preview-table { margin-top: 12px; }
+.ai-preview-table :deep(.el-input-number) { width: 100%; }
+.ai-question-dialog :deep(.el-dialog__body) { padding-top: 10px; }
 </style>
