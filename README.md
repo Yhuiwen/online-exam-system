@@ -43,6 +43,8 @@
 ### 题库管理
 
 - 题目新增、编辑、删除与分页查询
+- **权限模型**：管理员可维护全部题目；教师只能编辑/删除自己创建的题目（`create_user_id`）；同课程下所有题目可用于手动/自动组卷，但不可修改他人题目
+- 已被考试引用的题目禁止删除，避免试卷预览缺题
 - 按课程、题型、难度、知识点和关键词筛选
 - 支持单选题、多选题、判断题、填空题和简答题
 - Excel 导入模板下载
@@ -100,7 +102,7 @@
 - **AI 出题**：按课程/题型/难度/知识点生成题目，教师审核后入库
 - **AI 一键组卷**：按多条规则 AI 生成题目并写入草稿考试试卷
 - **文档解析入库**：从 PDF/Word 提取题目预览，确认后入库
-- **RAG 课程知识库**：上传资料、关键词检索、智能答疑与引用来源
+- **RAG 课程知识库**：MySQL 存储文本片段与 `embedding_json`；关键词 + mock/openai embedding 混合排序（未接入 Milvus/pgvector/Elasticsearch）
 
 ### 工程化
 
@@ -113,19 +115,22 @@
 
 近期工程化优化重点：
 
-- **教师权限边界**：考试创建者（`teacherId`）才可修改/组卷/发布；管理员可管理全部；监考教师仅可查看监控数据
+- **教师权限边界**：考试创建者（`teacherId`）才可修改/组卷/发布；题目创建者（`createUserId`）才可编辑/删除题目；同课程题目可共享组卷
 - **CORS 配置**：通过 `app.cors.allowed-origins` / 环境变量 `CORS_ALLOWED_ORIGINS` 限制来源，不再默认 `*`
 - **JWT 生产校验**：启用 `prod` profile 时，弱/默认 `JWT_SECRET` 将导致启动失败
 - **统一异常状态码**：业务异常返回对应 HTTP 状态码；未知异常不向客户端暴露内部信息
-- **核心测试**：补充考试越权、监考权限边界、学生题目脱敏、登录状态码、Review/Statistics 权限等用例
+- **核心测试**：补充考试/题库越权、监考权限边界、学生题目脱敏、登录状态码等用例
+- **E2E 分层**：`test:e2e:smoke` 仅验证前端页面；完整联调需手动启动后端与数据库
+- **生产 Docker 隔离**：`docker-compose.prod.yml` 仅暴露前端端口
 
 ## 核心代码位置
 
 | 模块 | 主要文件 |
 | --- | --- |
 | JWT 鉴权 | `security/JwtUtil.java`、`security/JwtAuthenticationFilter.java` |
-| 权限控制 | `config/SecurityConfig.java`、`security/ExamAccessGuard.java`、`service/impl/ExamServiceImpl.java` |
+| 权限控制 | `config/SecurityConfig.java`、`security/ExamAccessGuard.java`、`security/QuestionAccessGuard.java` |
 | 考试管理 | `controller/ExamController.java`、`service/impl/ExamServiceImpl.java`、`service/impl/PaperServiceImpl.java` |
+| 题库管理 | `controller/QuestionController.java`、`service/impl/QuestionServiceImpl.java` |
 | 批改与统计 | `controller/ReviewController.java`、`controller/StatisticsController.java` |
 | 防作弊监控 | `controller/ExamViolationController.java`、`service/impl/ExamViolationServiceImpl.java`、`monitor/ExamMonitorPublisher.java` |
 | RAG 知识库 | `ai/knowledge/` 模块（文档上传、分片、检索、答疑） |
@@ -137,7 +142,7 @@
 - 修改演示账号默认密码，不要使用 `123456` 上线
 - 生产环境必须设置足够长度的随机 `JWT_SECRET`（启用 `prod` profile 时会校验）
 - 通过 `CORS_ALLOWED_ORIGINS` 限制前端域名，不要使用 `*`
-- 生产环境不要将 MySQL（3306）、Redis（6379）端口暴露到公网
+- 生产环境不要将 MySQL（3306）、Redis（6379）端口暴露到公网；请使用 `docker-compose.prod.yml`
 - 不要将 `.env`、真实 API Key 或数据库密码提交到 Git 仓库
 
 ## 系统角色
@@ -145,7 +150,7 @@
 | 角色 | 主要权限 |
 | --- | --- |
 | 管理员 | 用户管理、课程管理、考试管理、试卷预览、考试监控和统计分析 |
-| 教师 | 课程管理、题库管理、自动/手动组卷、**仅管理自己创建的考试**、人工批改、考试监控和统计分析 |
+| 教师 | 课程管理、**维护自己创建的题目**、同课程题目组卷、**仅管理自己创建的考试**、人工批改、考试监控和统计分析 |
 | 学生 | 参加考试、在线答题、成绩查询、错题查看和个人统计 |
 
 ## 项目结构
@@ -305,9 +310,11 @@ Vite 开发服务器会将 `/api` 请求代理到 `http://localhost:8080`。
 npm run build
 ```
 
-## Docker Compose 一键部署
+## Docker Compose 部署
 
-项目根目录提供 `docker-compose.yml`，包含 MySQL、Redis、后端和前端（Nginx 反代 API）。
+### 开发环境（`docker-compose.yml`）
+
+用于本地开发/演示，暴露 MySQL 3306、Redis 6379、后端 8080、前端 5173。
 
 1. 复制环境变量模板并按需修改：
 
@@ -339,6 +346,24 @@ Docker 环境下 Redis 默认启用（`REDIS_ENABLED=true`）。AI 功能通过 
 ```powershell
 docker compose down
 ```
+
+### 生产环境（`docker-compose.prod.yml`）
+
+生产 Compose **不暴露** MySQL、Redis、后端端口，仅暴露前端 Nginx（默认 80）。后端 API 由 Nginx 反代 `/api` 与 `/ws`。
+
+**必须**在 `.env` 或环境中设置：
+
+- `MYSQL_PASSWORD` — 数据库 root 密码
+- `JWT_SECRET` — 足够长度的随机密钥（启用 `prod` profile 会校验）
+- `CORS_ALLOWED_ORIGINS` — 允许的前端来源，如 `https://exam.example.com`
+
+可选：`FRONTEND_PORT`（默认 80）、`AI_PROVIDER`、`OPENAI_API_KEY` 等。
+
+```powershell
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+访问：`http://localhost`（或你映射的 `FRONTEND_PORT`）。
 
 ## 接口文档
 
@@ -461,9 +486,9 @@ docker compose down
 
 ## 后续优化方向
 
-- RAG 接入 Milvus / pgvector 等专用向量数据库（当前为 MySQL JSON + 内存余弦相似度）
+- RAG 接入 Milvus / pgvector / Elasticsearch 等专用向量数据库（当前为 MySQL `embedding_json` + 内存余弦相似度）
 - 题目图片、公式和富文本编辑支持
-- 完整 E2E 联调测试（`E2E_WITH_BACKEND=1 npm run test:e2e`）
+- 扩展 E2E 覆盖更多登录后业务流程（当前 smoke 仅验证登录页；full 需手动启后端）
 - 操作日志审计与敏感配置集中管理
 
 ## 版本管理
@@ -534,7 +559,7 @@ ai:
 
 ## AI 课程知识库答疑
 
-本项目新增轻量级 RAG 课程知识库答疑功能，适合课程资料规模较小、需要稳定演示的场景。第一版不引入 Milvus、Elasticsearch、LangChain 或向量数据库，而是将课程资料解析为数据库文本片段，通过关键词文本相似度检索相关 chunk，再把“用户问题 + 相关片段”交给后端 AI 模型生成答案。
+本项目提供轻量级 RAG 课程知识库答疑，适合课程资料规模较小、需要稳定演示的场景。**未接入** Milvus、Elasticsearch、LangChain 或 pgvector 等专用向量库；片段与 embedding 存储在 MySQL（`course_knowledge_chunk.embedding_json`），检索采用 **关键词 + mock/openai embedding 混合排序**。
 
 ### 功能说明
 
@@ -627,20 +652,34 @@ SOURCE ai-knowledge-vector-migration.sql;
 
 ### E2E 自动化测试
 
-前端使用 Playwright：
+前端使用 Playwright，分为 **smoke**（仅前端）与 **full**（需后端联调）两层。
+
+#### 前端 Smoke E2E（默认推荐）
+
+只启动 Vite 开发服务器，验证登录页等静态 UI 是否可打开，**不需要** MySQL/Redis/后端：
 
 ```bash
 cd exam-system-web
 npm install
-npx playwright install chromium
-npm run test:e2e
+npx playwright install chromium   # 或使用 E2E_BROWSER_CHANNEL=chrome
+npm run test:e2e:smoke
 ```
 
-联调后端与数据库时：
+等价于 `playwright test e2e/login.spec.js`；CI 当前运行的也是这一层 smoke 用例。
 
-```bash
-E2E_WITH_BACKEND=1 npm run test:e2e
+#### 完整联调 E2E（手动准备环境）
+
+需要 **后端（8080）、MySQL、Redis、前端（5173）** 均已启动，然后：
+
+```powershell
+$env:E2E_WITH_BACKEND="1"
+$env:E2E_SKIP_WEB_SERVER="1"
+npm run test:e2e:full
 ```
+
+`E2E_WITH_BACKEND=1` 才会运行 `teacher-dashboard.spec.js` 中的登录联调用例；未设置时该用例自动 skip。Playwright **不会**自动启动后端，请自行保证服务可用。
+
+保留通用入口：`npm run test:e2e`（等同跑全部 spec，联调用例仍受 `E2E_WITH_BACKEND` 控制）。
 
 **Windows 下 Chromium 下载失败时**
 
@@ -694,6 +733,6 @@ API Key 只在后端读取，不会返回给前端，也不会写死在代码里
 
 ### 注意事项
 
-- 第一版采用数据库文本片段检索，暂未接入 Embedding 和向量数据库。
+- 向量 embedding 存储在 MySQL JSON 字段，语义检索在应用内存中计算余弦相似度，适合小规模资料。
+- 尚未接入 Milvus / pgvector / Elasticsearch 等专用向量数据库。
 - 适合课程资料较少、演示和课程设计场景。
-- 后续可升级为 Embedding + 向量数据库，提高语义检索能力。
