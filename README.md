@@ -1,8 +1,159 @@
 # 在线考试与智能题库管理系统
 
+![Java 17](https://img.shields.io/badge/Java-17-orange?style=flat-square)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3-6DB33F?style=flat-square&logo=springboot&logoColor=white)
+![Vue 3](https://img.shields.io/badge/Vue-3-42b883?style=flat-square&logo=vuedotjs&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?style=flat-square&logo=mysql&logoColor=white)
+![CI](https://github.com/Yhuiwen/online-exam-system/actions/workflows/ci.yml/badge.svg)
+
 一个基于 Spring Boot 与 Vue 3 构建的前后端分离在线考试平台，面向管理员、教师和学生三类用户，覆盖题库维护、智能组卷、在线答题、自动判分、人工批改、成绩分析和考试防作弊监控等完整业务流程。
 
-本项目适合作为 Java Web 课程设计、毕业设计基础项目及 Java 后端开发简历项目。
+本项目适合作为 Java Web 课程设计、毕业设计基础项目及 Java 后端开发简历项目。面试答辩可参考 [docs/interview-guide.md](docs/interview-guide.md)。
+
+## 项目亮点总览
+
+- **三角色权限体系**：管理员 / 教师 / 学生，JWT + Spring Security，考试与题目按创建者隔离
+- **在线考试闭环**：创建考试 → 组卷 → 发布 → 答题 → 判分 → 批改 → 统计
+- **题库导入导出**：Excel 模板、逐行校验、重复检测，支持多题型与课程维度筛选
+- **主观题批改**：简答题人工评分，批改完成后自动汇总最终成绩
+- **防作弊监控**：前端行为上报 + 加权风险评分 + WebSocket 实时推送
+- **AI 出题 / RAG 知识库**：AI 生成题目审核入库；MySQL 片段 + embedding 混合检索答疑
+- **Docker 部署与测试**：开发/生产 Compose 分离，57+ 单元测试 + CI + Playwright smoke E2E
+
+## 系统架构说明
+
+```mermaid
+flowchart TB
+    subgraph Client["用户浏览器"]
+        Vue["Vue 3 + Vite + Element Plus"]
+    end
+
+    subgraph Gateway["接入层"]
+        Nginx["Nginx / Vite Dev Proxy"]
+    end
+
+    subgraph Backend["Spring Boot 后端"]
+        API["REST API + WebSocket STOMP"]
+        Security["Spring Security + JWT"]
+        Service["业务 Service 层"]
+        MP["MyBatis-Plus"]
+    end
+
+    subgraph Data["数据与缓存"]
+        MySQL[("MySQL 8")]
+        Redis[("Redis 7")]
+    end
+
+    subgraph AI["AI 能力（可选）"]
+        Provider["OpenAI 兼容 API / Mock"]
+        RAG["RAG 检索 + 答疑"]
+    end
+
+    subgraph Deploy["部署"]
+        Docker["Docker Compose"]
+    end
+
+    Vue --> Nginx
+    Nginx --> API
+    API --> Security --> Service --> MP
+    MP --> MySQL
+    Service --> Redis
+    Service --> Provider
+    Service --> RAG
+    Docker --- Nginx
+    Docker --- Backend
+    Docker --- MySQL
+    Docker --- Redis
+```
+
+## 核心业务流程
+
+```mermaid
+flowchart LR
+    A[教师创建考试] --> B[题库选题 / 自动组卷]
+    B --> C[预览并调整试卷]
+    C --> D[发布考试]
+    D --> E[学生登录并答题]
+    E --> F{题型?}
+    F -->|客观题| G[自动判分]
+    F -->|简答题| H[进入待批改]
+    G --> I[提交答卷]
+    H --> J[教师人工批改]
+    J --> I
+    I --> K[成绩与错题记录]
+    K --> L[统计分析 / 监控查看]
+```
+
+## 数据库核心表关系
+
+```mermaid
+erDiagram
+    sys_user ||--o{ course : "teaches"
+    sys_user ||--o{ question : "creates"
+    sys_user ||--o{ exam : "creates"
+    sys_user ||--o{ student_exam : "takes"
+    course ||--o{ question : "contains"
+    course ||--o{ exam : "belongs_to"
+    exam ||--o{ exam_question : "has"
+    question ||--o{ exam_question : "referenced_by"
+    exam ||--o{ student_exam : "assigned_to"
+    student_exam ||--o{ student_answer : "contains"
+    question ||--o{ student_answer : "answered_as"
+    sys_user ||--o{ student_answer : "reviews"
+    student_exam ||--o{ exam_violation : "reports"
+    exam ||--o{ exam_violation : "monitored_in"
+    sys_user ||--o{ wrong_question : "records"
+    question ||--o{ wrong_question : "wrong_on"
+    exam ||--o{ wrong_question : "from_exam"
+
+    sys_user {
+        bigint id PK
+        string role
+        string username
+    }
+    course {
+        bigint id PK
+        bigint teacher_id FK
+    }
+    question {
+        bigint id PK
+        bigint course_id FK
+        bigint create_user_id FK
+    }
+    exam {
+        bigint id PK
+        bigint course_id FK
+        bigint teacher_id FK
+        string status
+    }
+    exam_question {
+        bigint id PK
+        bigint exam_id FK
+        bigint question_id FK
+    }
+    student_exam {
+        bigint id PK
+        bigint student_id FK
+        bigint exam_id FK
+        string status
+    }
+    student_answer {
+        bigint id PK
+        bigint student_exam_id FK
+        bigint question_id FK
+    }
+    wrong_question {
+        bigint id PK
+        bigint student_id FK
+        bigint question_id FK
+        bigint exam_id FK
+    }
+    exam_violation {
+        bigint id PK
+        bigint student_exam_id FK
+        bigint exam_id FK
+    }
+```
 
 ## 技术栈
 
