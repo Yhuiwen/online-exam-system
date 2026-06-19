@@ -16,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
+
 @Service
 @RequiredArgsConstructor
 public class QuestionServiceImpl implements QuestionService {
@@ -62,6 +64,9 @@ public class QuestionServiceImpl implements QuestionService {
     public void update(Long id, Question patch) {
         Question existing = questionAccessGuard.requireManageableQuestion(id);
         QuestionSourceValidator.validateAndNormalize(patch);
+        if (isReferencedByExam(id)) {
+            rejectReferencedCoreFieldChanges(existing, patch);
+        }
         applyPatch(existing, patch);
         questionMapper.updateById(existing);
     }
@@ -76,6 +81,29 @@ public class QuestionServiceImpl implements QuestionService {
             throw new BusinessException("该题目已被考试引用，无法删除");
         }
         questionMapper.deleteById(id);
+    }
+
+    private boolean isReferencedByExam(Long questionId) {
+        long referencedCount = examQuestionMapper.selectCount(new LambdaQueryWrapper<ExamQuestion>()
+                .eq(ExamQuestion::getQuestionId, questionId));
+        return referencedCount > 0;
+    }
+
+    private void rejectReferencedCoreFieldChanges(Question existing, Question patch) {
+        if (changed(existing.getCourseId(), patch.getCourseId())
+                || changed(existing.getQuestionType(), patch.getQuestionType())
+                || changed(existing.getContent(), patch.getContent())
+                || changed(existing.getOptionsJson(), patch.getOptionsJson())
+                || changed(existing.getAnswer(), patch.getAnswer())
+                || changed(existing.getDifficulty(), patch.getDifficulty())
+                || changed(existing.getScore(), patch.getScore())
+                || changed(existing.getSourceCategory(), patch.getSourceCategory())) {
+            throw new BusinessException("该题目已被考试引用，禁止修改题干、选项、答案、题型、课程、难度、分值等核心内容");
+        }
+    }
+
+    private boolean changed(Object current, Object incoming) {
+        return incoming != null && !Objects.equals(current, incoming);
     }
 
     private void applyPatch(Question existing, Question patch) {
@@ -109,11 +137,21 @@ public class QuestionServiceImpl implements QuestionService {
         if (patch.getSourceCategory() != null) {
             existing.setSourceCategory(patch.getSourceCategory());
         }
-        existing.setExamYear(patch.getExamYear());
-        existing.setExamScope(patch.getExamScope());
-        existing.setProvince(patch.getProvince());
-        existing.setPaperType(patch.getPaperType());
-        existing.setSourceRef(patch.getSourceRef());
+        if (patch.getExamYear() != null) {
+            existing.setExamYear(patch.getExamYear());
+        }
+        if (patch.getExamScope() != null) {
+            existing.setExamScope(patch.getExamScope());
+        }
+        if (patch.getProvince() != null) {
+            existing.setProvince(patch.getProvince());
+        }
+        if (patch.getPaperType() != null) {
+            existing.setPaperType(patch.getPaperType());
+        }
+        if (patch.getSourceRef() != null) {
+            existing.setSourceRef(patch.getSourceRef());
+        }
     }
 
     private boolean hasText(String value) {

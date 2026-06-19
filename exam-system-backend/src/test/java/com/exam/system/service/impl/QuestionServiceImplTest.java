@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
@@ -84,6 +85,7 @@ class QuestionServiceImplTest {
         asRole("ADMIN", 1L);
         Question existing = question(10L, 99L);
         when(questionAccessGuard.requireManageableQuestion(10L)).thenReturn(existing);
+        when(examQuestionMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
 
         service.update(10L, validQuestion());
 
@@ -113,6 +115,65 @@ class QuestionServiceImplTest {
 
         assertEquals("该题目已被考试引用，无法删除", exception.getMessage());
         verify(questionMapper, never()).deleteById(eq(10L));
+    }
+
+    @Test
+    void cannotUpdateReferencedQuestionCoreFields() {
+        asRole("TEACHER", 2L);
+        Question existing = question(10L, 2L);
+        existing.setSourceCategory(null);
+        when(questionAccessGuard.requireManageableQuestion(10L)).thenReturn(existing);
+        when(examQuestionMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
+
+        Question patch = new Question();
+        patch.setContent("updated content");
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> service.update(10L, patch));
+
+        assertTrue(exception.getMessage().contains("已被考试引用"));
+        verify(questionMapper, never()).updateById(any(Question.class));
+    }
+
+    @Test
+    void canUpdateReferencedQuestionNonCoreFields() {
+        asRole("TEACHER", 2L);
+        Question existing = question(10L, 2L);
+        existing.setSourceCategory(null);
+        when(questionAccessGuard.requireManageableQuestion(10L)).thenReturn(existing);
+        when(examQuestionMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
+
+        Question patch = new Question();
+        patch.setAnalysis("updated analysis");
+        patch.setKnowledgeTag("updated tag");
+
+        service.update(10L, patch);
+
+        verify(questionMapper).updateById(existing);
+        assertEquals("updated analysis", existing.getAnalysis());
+        assertEquals("updated tag", existing.getKnowledgeTag());
+    }
+
+    @Test
+    void updateDoesNotClearOptionalArchiveFieldsWhenPatchOmitsThem() {
+        asRole("ADMIN", 1L);
+        Question existing = question(10L, 99L);
+        existing.setExamYear(2024);
+        existing.setExamScope("NATIONAL");
+        existing.setProvince("全国");
+        existing.setPaperType("A");
+        existing.setSourceRef("2024 national paper");
+        when(questionAccessGuard.requireManageableQuestion(10L)).thenReturn(existing);
+        when(examQuestionMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+
+        service.update(10L, validQuestion());
+
+        verify(questionMapper).updateById(existing);
+        assertEquals(2024, existing.getExamYear());
+        assertEquals("NATIONAL", existing.getExamScope());
+        assertEquals("全国", existing.getProvince());
+        assertEquals("A", existing.getPaperType());
+        assertEquals("2024 national paper", existing.getSourceRef());
     }
 
     private void asRole(String role, long userId) {
