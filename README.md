@@ -10,6 +10,50 @@
 
 本项目适合作为 Java Web 课程设计、毕业设计基础项目及 Java 后端开发简历项目。面试答辩可参考 [docs/interview-guide.md](docs/interview-guide.md)。
 
+## 项目预览
+
+| 登录页 | 教师工作台 |
+| --- | --- |
+| ![登录页](docs/screenshots/01-login.png) | ![教师工作台](docs/screenshots/02-dashboard.png) |
+
+| 题库管理 | 试卷预览 |
+| --- | --- |
+| ![题库管理](docs/screenshots/03-question-bank.png) | ![试卷预览](docs/screenshots/04-exam-preview.png) |
+
+| 学生答题 | 成绩统计 |
+| --- | --- |
+| ![学生答题](docs/screenshots/05-student-exam.png) | ![成绩统计](docs/screenshots/06-statistics.png) |
+
+## 快速导航
+
+- [本地运行指南](docs/run-guide.md)
+- [演示指南与面试讲解](docs/demo-guide.md)
+- [面试答辩指南](docs/interview-guide.md)
+- [项目截图目录](docs/screenshots)
+- [数据库建表脚本](exam-system-backend/src/main/resources/schema.sql)
+- [演示数据脚本](exam-system-backend/src/main/resources/data.sql)
+
+## 演示账号
+
+演示账号来自 `exam-system-backend/src/main/resources/data.sql`，默认密码均为 `123456`。
+
+| 角色 | 用户名 | 密码 | 可演示功能 |
+| --- | --- | --- | --- |
+| 管理员 | `admin` | `123456` | 用户管理、课程管理、考试管理、数据查看 |
+| 教师 | `teacher` | `123456` | 题库维护、组卷、主观题批改、成绩统计 |
+| 学生 | `student` | `123456` | 在线答题、查看成绩、错题记录 |
+
+## 一分钟运行流程
+
+本仓库已提供 `docker-compose.yml` 和 `.env.example`，可优先使用 Docker Compose 运行；也可按 [本地运行指南](docs/run-guide.md) 使用本地 MySQL + Maven + Vite 启动。
+
+```powershell
+copy .env.example .env
+docker compose up -d --build
+```
+
+访问地址：`http://localhost:5173`。更完整的启动、排查和演示步骤见 [本地运行指南](docs/run-guide.md) 与 [演示指南](docs/demo-guide.md)。
+
 ## 项目亮点总览
 
 - **三角色权限体系**：管理员 / 教师 / 学生，JWT + Spring Security，考试与题目按创建者隔离
