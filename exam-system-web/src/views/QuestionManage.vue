@@ -98,6 +98,20 @@ const types = [
   ['SHORT_ANSWER', '简答']
 ]
 
+function difficultyTagType(value) {
+  return { EASY: 'success', MEDIUM: 'warning', HARD: 'danger' }[value] || 'info'
+}
+
+function questionTypeTagType(value) {
+  return {
+    SINGLE_CHOICE: 'primary',
+    MULTIPLE_CHOICE: 'success',
+    TRUE_FALSE: 'info',
+    FILL_BLANK: 'warning',
+    SHORT_ANSWER: 'danger'
+  }[value] || 'info'
+}
+
 function defaultForm() {
   return {
     courseId: courses.value[0]?.id,
@@ -371,6 +385,14 @@ onMounted(async () => {
       </div>
     </div>
 
+    <section class="info-card">
+      <div>
+        <h2>题库筛选与批量维护</h2>
+        <p>支持题型、难度、知识点筛选，支持 Excel 批量导入导出。教师可按课程、来源和考试范围维护题目，便于后续自动组卷与试卷预览。</p>
+      </div>
+      <el-tag type="primary" effect="dark">Question Bank</el-tag>
+    </section>
+
     <div class="toolbar">
       <el-select v-model="query.courseId" clearable placeholder="课程" style="width: 180px">
         <el-option v-for="course in courses" :key="course.id" :label="course.courseName" :value="course.id" />
@@ -413,10 +435,18 @@ onMounted(async () => {
           <template #default="{ row }">{{ formatSourceSummary(row) }}</template>
         </el-table-column>
         <el-table-column label="题型" width="110">
-          <template #default="{ row }">{{ formatQuestionType(row.questionType) }}</template>
+          <template #default="{ row }">
+            <el-tag :type="questionTypeTagType(row.questionType)" effect="plain">
+              {{ formatQuestionType(row.questionType) }}
+            </el-tag>
+          </template>
         </el-table-column>
         <el-table-column label="难度" width="90">
-          <template #default="{ row }">{{ formatDifficulty(row.difficulty) }}</template>
+          <template #default="{ row }">
+            <el-tag :type="difficultyTagType(row.difficulty)" effect="plain">
+              {{ formatDifficulty(row.difficulty) }}
+            </el-tag>
+          </template>
         </el-table-column>
         <el-table-column prop="knowledgeTag" label="知识点" width="120" show-overflow-tooltip />
         <el-table-column prop="score" label="分值" width="70" />
@@ -427,6 +457,7 @@ onMounted(async () => {
           </template>
         </el-table-column>
       </el-table>
+      <el-empty v-if="!rows.length" description="暂无题目，请调整筛选条件或导入题库" />
       <el-pagination
         v-model:current-page="query.page"
         :page-size="query.size"
@@ -689,7 +720,20 @@ onMounted(async () => {
 
 <style scoped>
 .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.info-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 16px;
+  padding: 20px 22px;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+}
+.info-card h2 { margin: 0 0 8px; font-size: 18px; }
+.info-card p { margin: 0; color: #64748b; line-height: 1.7; }
+.toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; padding: 14px; border-radius: 10px; background: #fff; border: 1px solid #e5e7eb; }
 .option-list { display: grid; gap: 8px; width: 100%; }
 .import-summary { margin: 16px 0; }
 .import-tip { margin: 12px 0 0; color: #64748b; font-size: 13px; line-height: 1.6; }

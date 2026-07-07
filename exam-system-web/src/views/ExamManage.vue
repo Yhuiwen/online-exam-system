@@ -55,6 +55,10 @@ const form = reactive({
   durationMinutes: 60
 })
 
+function statusTagType(status) {
+  return { DRAFT: 'info', PUBLISHED: 'success', CLOSED: 'warning' }[status] || 'info'
+}
+
 async function load() {
   loading.value = true
   try {
@@ -98,7 +102,7 @@ async function changeStatus(id, value) {
 }
 
 async function removeExam(row) {
-  await ElMessageBox.confirm(`确认删除考试「${row.examName}」吗？`, '删除确认', { type: 'warning' })
+  await ElMessageBox.confirm(`确认删除考试“${row.examName}”吗？`, '删除确认', { type: 'warning' })
   await deleteExam(row.id)
   ElMessage.success('考试已删除')
   await load()
@@ -178,11 +182,26 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="page">
+  <div class="page exam-manage-page">
     <div class="page-header">
       <h1 class="page-title">考试管理</h1>
       <el-button type="primary" @click="openCreate">创建考试</el-button>
     </div>
+
+    <section class="flow-card">
+      <div>
+        <h2>考试流程</h2>
+        <p>从考试创建到成绩统计，覆盖教师组卷、学生答题与后续分析的完整闭环。</p>
+      </div>
+      <div class="flow-steps">
+        <span>创建考试</span>
+        <span>组卷</span>
+        <span>预览</span>
+        <span>发布</span>
+        <span>学生答题</span>
+        <span>统计</span>
+      </div>
+    </section>
 
     <div class="panel">
       <el-table v-loading="loading" :data="rows">
@@ -193,74 +212,26 @@ onMounted(async () => {
         </el-table-column>
         <el-table-column prop="durationMinutes" label="时长(分钟)" width="110" />
         <el-table-column prop="totalScore" label="总分" width="80" />
-        <el-table-column label="状态" width="110">
-          <template #default="{ row }">{{ formatExamStatus(row.status) }}</template>
+        <el-table-column label="状态" width="120">
+          <template #default="{ row }">
+            <el-tag :type="statusTagType(row.status)" effect="plain">{{ formatExamStatus(row.status) }}</el-tag>
+          </template>
         </el-table-column>
         <el-table-column label="操作" min-width="520" fixed="right">
           <template #default="{ row }">
             <el-button link @click="showQuestions(row.id)">查看题目</el-button>
-            <el-button
-              v-if="row.status === 'DRAFT'"
-              link
-              type="warning"
-              @click="openAiPaper(row)"
-            >
-              AI 组卷
-            </el-button>
-            <el-button
-              v-if="row.status === 'DRAFT'"
-              link
-              type="primary"
-              @click="router.push(`/auto-paper/${row.id}`)"
-            >
-              自动组卷
-            </el-button>
-            <el-button
-              v-if="row.status === 'DRAFT'"
-              link
-              type="primary"
-              @click="router.push(`/teacher/exam/${row.id}/manual-paper`)"
-            >
-              手动组卷
-            </el-button>
+            <el-button v-if="row.status === 'DRAFT'" link type="warning" @click="openAiPaper(row)">AI 组卷</el-button>
+            <el-button v-if="row.status === 'DRAFT'" link type="primary" @click="router.push(`/auto-paper/${row.id}`)">自动组卷</el-button>
+            <el-button v-if="row.status === 'DRAFT'" link type="primary" @click="router.push(`/teacher/exam/${row.id}/manual-paper`)">手动组卷</el-button>
             <el-button link @click="router.push(`/teacher/exam/${row.id}/preview`)">试卷预览</el-button>
-            <el-button
-              v-if="isAdmin"
-              link
-              type="primary"
-              @click="openProctorDialog(row)"
-            >
-              分配监考
-            </el-button>
-            <el-button
-              v-if="row.status === 'DRAFT'"
-              link
-              type="success"
-              :loading="statusLoadingId === row.id"
-              @click="changeStatus(row.id, 'PUBLISHED')"
-            >
-              发布
-            </el-button>
-            <el-button
-              v-if="row.status === 'PUBLISHED'"
-              link
-              type="danger"
-              :loading="statusLoadingId === row.id"
-              @click="changeStatus(row.id, 'CLOSED')"
-            >
-              关闭
-            </el-button>
-            <el-button
-              v-if="row.status !== 'PUBLISHED'"
-              link
-              type="danger"
-              @click="removeExam(row)"
-            >
-              删除
-            </el-button>
+            <el-button v-if="isAdmin" link type="primary" @click="openProctorDialog(row)">分配监考</el-button>
+            <el-button v-if="row.status === 'DRAFT'" link type="success" :loading="statusLoadingId === row.id" @click="changeStatus(row.id, 'PUBLISHED')">发布</el-button>
+            <el-button v-if="row.status === 'PUBLISHED'" link type="danger" :loading="statusLoadingId === row.id" @click="changeStatus(row.id, 'CLOSED')">关闭</el-button>
+            <el-button v-if="row.status !== 'PUBLISHED'" link type="danger" @click="removeExam(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
+      <el-empty v-if="!rows.length" description="暂无考试，请先创建考试并完成组卷" />
     </div>
 
     <el-dialog v-model="visible" title="创建考试" width="560px">
@@ -268,21 +239,16 @@ onMounted(async () => {
         <el-form-item label="考试名称"><el-input v-model="form.examName" /></el-form-item>
         <el-form-item label="课程">
           <el-select v-model="form.courseId">
-            <el-option
-              v-for="course in courses"
-              :key="course.id"
-              :label="course.courseName"
-              :value="course.id"
-            />
+            <el-option v-for="course in courses" :key="course.id" :label="course.courseName" :value="course.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="考试时间">
+        <el-form-item label="开始时间">
           <el-date-picker v-model="form.startTime" type="datetime" value-format="YYYY-MM-DDTHH:mm:ss" />
         </el-form-item>
         <el-form-item label="结束时间">
           <el-date-picker v-model="form.endTime" type="datetime" value-format="YYYY-MM-DDTHH:mm:ss" />
         </el-form-item>
-        <el-form-item label="时长">
+        <el-form-item label="考试时长">
           <el-input-number v-model="form.durationMinutes" :min="1" />
         </el-form-item>
       </el-form>
@@ -293,14 +259,9 @@ onMounted(async () => {
     </el-dialog>
 
     <el-dialog v-model="proctorVisible" title="分配监考教师" width="520px">
-      <p class="proctor-tip">为考试「{{ currentExam?.examName }}」选择监考教师，被选中的教师可查看该场考试监控数据。</p>
+      <p class="dialog-tip">为考试“{{ currentExam?.examName }}”选择监考教师，被选中的教师可查看该场考试监控数据。</p>
       <el-select v-model="selectedProctors" multiple filterable placeholder="请选择监考教师" style="width: 100%">
-        <el-option
-          v-for="teacher in teachers"
-          :key="teacher.id"
-          :label="`${teacher.realName} (${teacher.username})`"
-          :value="teacher.id"
-        />
+        <el-option v-for="teacher in teachers" :key="teacher.id" :label="`${teacher.realName} (${teacher.username})`" :value="teacher.id" />
       </el-select>
       <template #footer>
         <el-button @click="proctorVisible = false">取消</el-button>
@@ -309,20 +270,11 @@ onMounted(async () => {
     </el-dialog>
 
     <el-dialog v-model="aiPaperVisible" title="AI 一键组卷" width="760px">
-      <p class="proctor-tip">
-        为考试「{{ aiPaperExam?.examName }}」按规则 AI 生成题目并写入试卷。生成后可在试卷预览中调整。
-      </p>
+      <p class="dialog-tip">为考试“{{ aiPaperExam?.examName }}”按规则生成题目并写入试卷，生成后可在试卷预览中检查。</p>
       <div v-for="(section, index) in aiPaperSections" :key="index" class="ai-section">
         <div class="ai-section-header">
           <strong>规则 {{ index + 1 }}</strong>
-          <el-button
-            v-if="aiPaperSections.length > 1"
-            link
-            type="danger"
-            @click="removeAiPaperSection(index)"
-          >
-            删除
-          </el-button>
+          <el-button v-if="aiPaperSections.length > 1" link type="danger" @click="removeAiPaperSection(index)">删除</el-button>
         </div>
         <el-form label-width="90px">
           <el-form-item label="题型">
@@ -341,18 +293,10 @@ onMounted(async () => {
               <el-option label="困难" value="HARD" />
             </el-select>
           </el-form-item>
-          <el-form-item label="知识点">
-            <el-input v-model="section.knowledgePoint" placeholder="可选" />
-          </el-form-item>
-          <el-form-item label="数量">
-            <el-input-number v-model="section.count" :min="1" :max="20" />
-          </el-form-item>
-          <el-form-item label="分值">
-            <el-input-number v-model="section.score" :min="1" :max="100" />
-          </el-form-item>
-          <el-form-item label="额外要求">
-            <el-input v-model="section.requirement" type="textarea" :rows="2" />
-          </el-form-item>
+          <el-form-item label="知识点"><el-input v-model="section.knowledgePoint" placeholder="可选" /></el-form-item>
+          <el-form-item label="数量"><el-input-number v-model="section.count" :min="1" :max="20" /></el-form-item>
+          <el-form-item label="分值"><el-input-number v-model="section.score" :min="1" :max="100" /></el-form-item>
+          <el-form-item label="额外要求"><el-input v-model="section.requirement" type="textarea" :rows="2" /></el-form-item>
         </el-form>
       </div>
       <el-button link type="primary" @click="addAiPaperSection">+ 添加规则</el-button>
@@ -376,7 +320,34 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.proctor-tip { color: #64748b; margin: 0 0 16px; line-height: 1.6; }
+.exam-manage-page { display: grid; gap: 16px; }
+.flow-card {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+  align-items: center;
+  padding: 20px 22px;
+  border-radius: 10px;
+  border: 1px solid #dbeafe;
+  background: #fff;
+}
+.flow-card h2 { margin: 0 0 8px; font-size: 18px; }
+.flow-card p { margin: 0; color: #64748b; line-height: 1.7; }
+.flow-steps {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+.flow-steps span {
+  position: relative;
+  padding: 12px 10px;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  text-align: center;
+  font-weight: 650;
+}
+.dialog-tip { color: #64748b; margin: 0 0 16px; line-height: 1.6; }
 .ai-section {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -388,5 +359,9 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+}
+@media (max-width: 980px) {
+  .flow-card { grid-template-columns: 1fr; }
+  .flow-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 </style>

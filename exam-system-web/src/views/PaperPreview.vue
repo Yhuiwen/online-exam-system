@@ -49,6 +49,15 @@ onMounted(loadPreview)
     </div>
 
     <template v-if="preview">
+      <section class="flow-strip">
+        <span>创建考试</span>
+        <span>组卷</span>
+        <span class="active">预览</span>
+        <span>发布</span>
+        <span>学生答题</span>
+        <span>统计</span>
+      </section>
+
       <section class="paper-heading">
         <h2>{{ preview.examName }}</h2>
         <div class="paper-meta">
@@ -74,8 +83,8 @@ onMounted(loadPreview)
           <header class="question-header">
             <strong>{{ index + 1 }}. {{ question.content }}</strong>
             <div class="question-tags">
-              <el-tag>{{ formatQuestionType(question.questionType) }}</el-tag>
-              <el-tag type="info">{{ formatDifficulty(question.difficulty) }}</el-tag>
+              <el-tag effect="plain">{{ formatQuestionType(question.questionType) }}</el-tag>
+              <el-tag type="info" effect="plain">{{ formatDifficulty(question.difficulty) }}</el-tag>
               <span>{{ question.score }} 分</span>
             </div>
           </header>
@@ -109,10 +118,34 @@ onMounted(loadPreview)
   display: flex;
   gap: 10px;
 }
+.flow-strip {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  background: #fff;
+}
+.flow-strip span {
+  padding: 11px 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #64748b;
+  text-align: center;
+  font-weight: 650;
+}
+.flow-strip .active {
+  background: #2563eb;
+  color: #fff;
+}
 .paper-heading {
   padding: 22px;
   margin-bottom: 18px;
   background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
   border-bottom: 3px solid #2563eb;
 }
 .paper-heading h2 {
@@ -132,10 +165,12 @@ onMounted(loadPreview)
   margin: 0 auto;
 }
 .question-block {
-  padding: 22px;
-  margin-bottom: 14px;
+  padding: 24px;
+  margin-bottom: 16px;
   background: #fff;
   border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .04);
 }
 .question-header {
   display: flex;
@@ -162,6 +197,8 @@ onMounted(loadPreview)
   padding: 16px 18px;
   margin: 16px 0;
   background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 .option-list div {
   display: flex;
@@ -178,6 +215,9 @@ onMounted(loadPreview)
   }
   .question-tags {
     width: 100%;
+  }
+  .flow-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 </style>
